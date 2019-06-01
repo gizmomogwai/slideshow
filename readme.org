@@ -1,0 +1,17 @@
+* Slideshow
+** Image Database
+Images tagged in exif or anything [[https://drewnoakes.com/code/exif/][metadata extractor]] can read with
+creation date. Images are access mainly by date. 
+Important access: 
+- by current date in different year,
+- by current month in different years
+Scanning of the database could take place once a day or something 
+For fast startup database can be cached in a yaml file but the real
+source is just a filesystem.  
+
+** Hardware
+The system should lookout if the hdmi connection is active, and only
+be active if hdmi is on. [[https://stackoverflow.com/questions/5813195/detecting-if-the-monitor-is-powered-off][ddcontrol]] might help here. Unfortunatly it
+does not. It seems there is no way to learn, that a display connected
+via hdmi is indeed on or tuned to the hdmi connection.
+
