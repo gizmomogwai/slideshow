@@ -6,6 +6,7 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.jpeg.JpegDirectory;
+import com.google.common.base.Stopwatch;
 
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
@@ -16,8 +17,13 @@ import javax.swing.OverlayLayout;
 import javax.swing.Timer;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -38,6 +44,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.awt.Image.SCALE_AREA_AVERAGING;
+import static java.awt.RenderingHints.KEY_ANTIALIASING;
+import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 
 public class Main {
 
@@ -45,18 +53,33 @@ public class Main {
         final Image image;
         final DatabaseImage databaseImage;
         final int offset;
+        private final Font font;
+        private final FontMetrics fontMetrics;
 
-        public SlideshowImage(Image image, DatabaseImage databaseImage, int offset) {
+        public SlideshowImage(Image image, DatabaseImage databaseImage, int offset, Font font, FontMetrics fontMetrics) {
             this.image = image;
             this.databaseImage = databaseImage;
             this.offset = offset;
+            this.font = font;
+            this.fontMetrics = fontMetrics;
         }
 
         public void draw(Graphics g, LocalDate now, int offset) {
             g.drawImage(image, this.offset - offset, 0, null);
             String text = textForDate(now);
-            g.setColor(Color.red);
-            g.drawString(text, this.offset - offset + 10, g.getFontMetrics().getAscent() + 10);
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setFont(font);
+            g2d.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
+
+            int x = this.offset - offset + fontMetrics.getMaxDescent() + 5;
+            int y = image.getHeight(null) - fontMetrics.getMaxDescent() - 5;
+            g2d.setColor(Color.black);
+            g2d.drawString(text, x - 1, y - 1);
+            g2d.drawString(text, x + 1, y - 1);
+            g2d.drawString(text, x + 1, y + 1);
+            g2d.drawString(text, x - 1, y + 1);
+            g2d.setColor(Color.gray);
+            g2d.drawString(text, x, y);
         }
 
         private String textForDate(LocalDate now) {
@@ -194,6 +217,7 @@ public class Main {
         public interface Listener {
             void databaseChanged(Database db);
         }
+
         public int getCurrentIndex() {
             return goodImages.index;
         }
@@ -206,7 +230,7 @@ public class Main {
 
             long startTime = System.currentTimeMillis();
             String s = Paths.get(path).normalize().toAbsolutePath().toString();
-            String pattern = "glob:" + s + "/**/*.{jpg,jpeg}";
+            String pattern = "glob:" + s + "/**/*.{jpg,JPG,jpeg,JPEG}";
             final PathMatcher matcher = FileSystems.getDefault().getPathMatcher(pattern);
             Files.walkFileTree(Paths.get(path).toAbsolutePath(), new SimpleFileVisitor<Path>() {
                 @Override
@@ -229,7 +253,7 @@ public class Main {
                 }
             });
             long endTime = System.currentTimeMillis();
-            System.out.println("read database of " + allImages.size() + " allImages in " + (endTime - startTime) / 1000 + "s");
+            System.out.println("read database of " + allImages.size() + " in " + (endTime - startTime) / 1000 + "s");
             goodImages = new GoodImages(allImages);
         }
 
@@ -239,9 +263,15 @@ public class Main {
             return this;
         }
 
-        SlideshowImage next(int offset) throws Exception {
+        SlideshowImage next(int offset, Font font, FontMetrics fontMetrics) throws Exception {
             DatabaseImage res = goodImages.next(this, listeners);
-            return new SlideshowImage(ImageIO.read(res.getFile()).getScaledInstance(-1, height, SCALE_AREA_AVERAGING), res, offset);
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            BufferedImage read = ImageIO.read(res.getFile());
+            System.out.println("time for reading image " + res.getFile() + ": " + stopwatch.elapsed());
+            stopwatch.reset().start();
+            Image scaledInstance = read.getScaledInstance(-1, height, SCALE_AREA_AVERAGING);
+            System.out.println("time for scaling image " + res.getFile() + ": " + stopwatch.elapsed());
+            return new SlideshowImage(scaledInstance, res, offset, font, fontMetrics);
         }
     }
 
@@ -249,6 +279,8 @@ public class Main {
 
         private final Database database;
         private final int width;
+        private final Font font;
+        private final FontMetrics fontMetrics;
         private int totalX;
         private int offset;
         private ArrayList<SlideshowImage> images = new ArrayList<>();
@@ -258,6 +290,8 @@ public class Main {
             this.offset = 0;
             this.width = width;
             this.totalX = 0;
+            this.font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf")).deriveFont(64f);
+            this.fontMetrics = getFontMetrics(font);
             fill();
             setAlignmentX(0.0f);
             setAlignmentY(0.0f);
@@ -299,7 +333,7 @@ public class Main {
                         break;
                     }
                 }
-                SlideshowImage i = database.next(totalX);
+                SlideshowImage i = database.next(totalX, font, fontMetrics);
                 totalX += i.image.getWidth(null);
                 images.add(i);
             }
@@ -308,7 +342,7 @@ public class Main {
 
     public static class Statistics extends JLabel {
 
-        public Statistics(Database database) {
+        public Statistics(Database database) throws Exception {
             setForeground(Color.red);
             setAlignmentX(0.0f);
             setAlignmentY(0.0f);
@@ -321,28 +355,30 @@ public class Main {
     }
 
     public static void main(String[] args) throws Exception {
-        int width = 1920 / 2;
-        int height = 1080 / 2;
+        System.setProperty("awt.useSystemAAFontSettings", "on");
+        System.setProperty("swing.aatext", "true");
 
-        Database db = new Database(height, args[0]);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        System.out.println("screenSize = " + screenSize);
 
-        Slideshow imageList = new Slideshow(db, width);
+        Database db = new Database(screenSize.height, args[0]);
+
+        Slideshow imageList = new Slideshow(db, screenSize.width);
 
         Statistics statistics = new Statistics(db);
-
-
+        statistics.setVisible(false);
         JFrame root = new JFrame("Slideshow");
         root.setUndecorated(true);
-        root.setSize(width, height);
+        root.setSize(screenSize);
         JPanel all = new JPanel();
         all.setLayout(new OverlayLayout(all));
         all.add(statistics);
         all.add(imageList);
         root.setContentPane(all);
         root.setVisible(true);
-        new Timer(1000 / 60, e -> {
+        new Timer(1000 / 30, e -> {
             try {
-                imageList.setOffset(imageList.getOffset() + 100);
+                imageList.setOffset(imageList.getOffset() + 1);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }

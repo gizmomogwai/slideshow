@@ -1,23 +1,23 @@
-
 plugins {
-  java
-  application
-  id("com.github.johnrengelman.shadow") version "5.0.0"
+    java
+    application
+    id("com.github.johnrengelman.shadow") version "5.0.0"
 }
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com . github . jengelman . gradle . plugins . shadow . tasks . ShadowJar
 
-repositories {
-  jcenter()
-}
+        repositories {
+            jcenter()
+        }
 
 dependencies {
-  implementation("com.drewnoakes:metadata-extractor:2.11.0")
-      testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
+    implementation("com.drewnoakes:metadata-extractor:2.11.0")
+    implementation("com.google.guava:guava:27.1-jre")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
 }
 
 application {
-  mainClassName = "com.flopcode.slideshow.Main"
+    mainClassName = "com.flopcode.slideshow.Main"
 }
 
 val jar by tasks.getting(Jar::class) {
