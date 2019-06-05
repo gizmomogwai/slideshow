@@ -11,9 +11,7 @@
  * is strictly forbidden unless prior written permission is obtained
  * from E.S.R.Labs.
  */
-package com.flopcode.slideshow;
-
-import com.flopcode.slideshow.Main.DatabaseImage;
+package com.flopcode.slideshow.database;
 
 import java.time.LocalDate;
 import java.util.Comparator;

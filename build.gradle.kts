@@ -4,11 +4,11 @@ plugins {
     id("com.github.johnrengelman.shadow") version "5.0.0"
 }
 
-import com . github . jengelman . gradle . plugins . shadow . tasks . ShadowJar
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-        repositories {
-            jcenter()
-        }
+repositories {
+    jcenter()
+}
 
 dependencies {
     implementation("com.drewnoakes:metadata-extractor:2.11.0")
