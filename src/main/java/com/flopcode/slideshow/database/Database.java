@@ -13,8 +13,6 @@
  */
 package com.flopcode.slideshow.database;
 
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -83,11 +81,7 @@ public class Database {
         return goodImages.goodImages.size();
     }
 
-    public int getCurrentIndex() {
-        return goodImages.index;
-    }
-
-    public DatabaseImage next(int offset, Font font, FontMetrics fontMetrics) {
+    public DatabaseImage next() {
         return goodImages.next(this, listeners);
     }
 

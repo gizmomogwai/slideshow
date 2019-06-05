@@ -68,9 +68,6 @@ public class SlideshowImage {
                 } else {
                     return "" + yearDelta + " years ago";
                 }
-            } else {
-                return String.format("%d-%02d", databaseImage.creationData.getYear(),
-                        databaseImage.creationData.getMonth().getValue());
             }
         }
         return String.format("%d-%02d-%02d", databaseImage.creationData.getYear(),

@@ -21,7 +21,6 @@ public class GoodImages {
     final java.util.List<DatabaseImage> allImages;
     java.util.List<DatabaseImage> goodImages;
     LocalDate now;
-    int index;
 
     GoodImages(java.util.List<DatabaseImage> allImages) {
         this.allImages = allImages;
@@ -36,7 +35,6 @@ public class GoodImages {
                 .collect(Collectors.toList());
         goodImages.sort(new DatabaseImageComparator(now));
         this.goodImages = goodImages;
-        this.index = 0;
     }
 
     private boolean sameMonth(LocalDate d, DatabaseImage i) {
@@ -47,8 +45,8 @@ public class GoodImages {
         if (!now.isEqual(LocalDate.now())) {
             calcGoodImages(allImages);
         }
+        int index = (int)Math.floor(Math.random() * goodImages.size());
         DatabaseImage res = goodImages.get(index);
-        index = (index + 1) % goodImages.size();
         for (Database.Listener l : listeners) {
             l.databaseChanged(database);
         }

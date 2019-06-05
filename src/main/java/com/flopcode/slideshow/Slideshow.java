@@ -45,7 +45,7 @@ public class Slideshow extends JComponent {
     private int offset;
     private ArrayList<SlideshowImage> images = new ArrayList<>();
 
-    private Slideshow(Database db, Dimension screenSize) throws Exception {
+    public Slideshow(Database db, Dimension screenSize) throws Exception {
         this.database = db;
         this.screenSize = screenSize;
         this.offset = 0;
@@ -53,8 +53,6 @@ public class Slideshow extends JComponent {
         this.font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf")).deriveFont(64f);
         this.fontMetrics = getFontMetrics(font);
         this.loader = new Loader();
-        setAlignmentX(0.0f);
-        setAlignmentY(0.0f);
     }
 
     public static Slideshow fromDatabase(Database db, Dimension screenSize) throws Exception {
@@ -108,7 +106,7 @@ public class Slideshow extends JComponent {
                     }
                 }
                 try {
-                    DatabaseImage i = slideshow.database.next(slideshow.totalX, slideshow.font, slideshow.fontMetrics);
+                    DatabaseImage i = slideshow.database.next();
 
                     Stopwatch stopwatch = Stopwatch.createStarted();
                     BufferedImage originalImage = ImageIO.read(i.getFile());

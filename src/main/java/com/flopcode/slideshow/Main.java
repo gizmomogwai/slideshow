@@ -17,15 +17,15 @@ public class Main {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         System.out.println("screenSize = " + screenSize);
-        // screenSize.width /= 3;
-        // screenSize.height /= 3;
+//         screenSize.width /= 3;
+//         screenSize.height /= 3;
 
         Database db = Database.fromPath(args[0]);
 
         Slideshow imageList = Slideshow.fromDatabase(db, screenSize);
 
         Statistics statistics = new Statistics(db);
-        statistics.setVisible(false);
+        statistics.setVisible(true);
 
         JFrame root = new JFrame("Slideshow");
         root.setUndecorated(true);
@@ -39,7 +39,7 @@ public class Main {
 
         root.setVisible(true);
 
-        new Timer(1000 / 30, e -> {
+        new Timer(1000 / 60, e -> {
             try {
                 imageList.setOffset(imageList.getOffset() + 1);
             } catch (Exception ex) {
