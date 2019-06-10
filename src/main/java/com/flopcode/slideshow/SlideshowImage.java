@@ -64,9 +64,9 @@ public class SlideshowImage {
             if (databaseImage.creationData.getDayOfMonth() == now.getDayOfMonth()) {
                 int yearDelta = now.getYear() - databaseImage.creationData.getYear();
                 if (yearDelta == 1) {
-                    return "Last year";
+                    return "On this day last year";
                 } else {
-                    return "" + yearDelta + " years ago";
+                    return "On this day " + yearDelta + " years ago";
                 }
             }
         }

@@ -31,8 +31,8 @@ end
 desc "Copy images to slideshow server"
 task :copy_images_to_slideshow do
   photos_lib = "/Users/monica/Pictures/Photos Library.photoslibrary"
-  sh "cp \"#{photos_lib}/database/photos.db\" tmp/"
-  command = 'sqlite3 tmp/photos.db "select imagePath from RKVersion inner join RKMaster where RKVersion.isFavorite = 1 and RKMaster.uuid = RKVersion.masterUuid;"'
+  sh "cp \"#{photos_lib}/database/photos.db\" /Users/monica/tmp/"
+  command = 'sqlite3 /Users/monica/tmp/photos.db "select imagePath from RKVersion inner join RKMaster where RKVersion.isFavorite = 1 and RKMaster.uuid = RKVersion.masterUuid;"'
   output = `#{command}`
   if not $?.success?
     raise "Cannot run #{command}"
