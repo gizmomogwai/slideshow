@@ -61,5 +61,4 @@ task :copy_images_to_slideshow do
   sh 'rm tmp/photos.db'
 end
 
-
 task :default => [:deploy]
