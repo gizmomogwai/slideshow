@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 
 import static java.awt.Image.SCALE_SMOOTH;
 
+
 public class Slideshow extends Canvas {
 
     private final Database database;

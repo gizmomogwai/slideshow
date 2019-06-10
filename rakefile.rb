@@ -48,14 +48,7 @@ task :copy_images_to_slideshow do
   lines.each do |file|
     
     path = File.dirname(file)
-    ssh_path = path
-                 .gsub(" ", "-")
-                 .gsub("ö", "oe")
-                 .gsub("ä", "ae")
-                 .gsub("ü", "ue")
-                 .gsub("Ä", "Ae")
-                 .gsub("Ö", "Oe")
-                 .gsub("Ü", "Ue")
+    ssh_path = path.gsub(" ", "-")
 
     server_path = "/share/Qmultimedia/Slideshow/#{ssh_path}"
     maverick_path = "#{masters}/#{file}"
