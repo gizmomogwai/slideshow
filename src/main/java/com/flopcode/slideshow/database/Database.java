@@ -40,7 +40,7 @@ public class Database {
 
         long startTime = System.currentTimeMillis();
         String s = Paths.get(path).normalize().toAbsolutePath().toString();
-        String pattern = "glob:" + s + "/**/*.{jpg,JPG,jpeg,JPEG}";
+        String pattern = "glob:" + s + "/**.{jpg,JPG,jpeg,JPEG}";
         final PathMatcher matcher = FileSystems.getDefault().getPathMatcher(pattern);
         Files.walkFileTree(Paths.get(path).toAbsolutePath(), new SimpleFileVisitor<Path>() {
             @Override

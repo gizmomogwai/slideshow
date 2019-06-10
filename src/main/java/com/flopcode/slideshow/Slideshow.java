@@ -18,12 +18,13 @@ import com.flopcode.slideshow.database.DatabaseImage;
 import com.google.common.base.Stopwatch;
 
 import javax.imageio.ImageIO;
-import javax.swing.JComponent;
+import java.awt.Canvas;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -34,7 +35,7 @@ import java.util.concurrent.Executors;
 
 import static java.awt.Image.SCALE_SMOOTH;
 
-public class Slideshow extends JComponent {
+public class Slideshow extends Canvas {
 
     private final Database database;
     private final Dimension screenSize;
@@ -50,6 +51,7 @@ public class Slideshow extends JComponent {
         this.screenSize = screenSize;
         this.offset = 0;
         this.totalX = 0;
+        setIgnoreRepaint(true);
         this.font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf")).deriveFont(64f);
         this.fontMetrics = getFontMetrics(font);
         this.loader = new Loader();
@@ -59,7 +61,6 @@ public class Slideshow extends JComponent {
         return new Slideshow(db, screenSize);
     }
 
-    @Override
     protected void paintComponent(Graphics g) {
         LocalDate now = LocalDate.now();
         synchronized (images) {
@@ -76,7 +77,18 @@ public class Slideshow extends JComponent {
     void setOffset(int offset) {
         loader.setOffset(this, offset);
         this.offset = offset;
-        repaint();
+    }
+
+    public void run() {
+        createBufferStrategy(2);
+        BufferStrategy buffers = getBufferStrategy();
+        while (true) {
+            setOffset(getOffset() + 1);
+            Graphics graphics = buffers.getDrawGraphics();
+            paintComponent(graphics);
+            graphics.dispose();
+            buffers.show();
+        }
     }
 
     private static class Loader {
@@ -118,7 +130,6 @@ public class Slideshow extends JComponent {
                     slideshow.totalX += image.image.getWidth(null);
                     synchronized (slideshow.images) {
                         slideshow.images.add(image);
-                        slideshow.repaint();
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

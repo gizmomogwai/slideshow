@@ -10,8 +10,33 @@ For fast startup database can be cached in a yaml file but the real
 source is just a filesystem.  
 
 ** Hardware
+*** RaspberryPi
+*** Motion Sensor
+https://www.amazon.de/gp/product/B00Q6OJ8AC
+https://www.hackster.io/hardikrathod/pir-motion-sensor-with-raspberry-pi-415c04
+xset dpms force off
+xset dpms force on
+https://www.amazon.de/Pyroelectrische-Infrarot-Bewegung-Sensor-Detektor/dp/B008AESDSY
+
+*** GPIOs
+**** Java
+Pi4J
+// https://mvnrepository.com/artifact/com.pi4j/pi4j-core
+compile group: 'com.pi4j', name: 'pi4j-core', version: '1.2'
+
+
+*** 
 The system should lookout if the hdmi connection is active, and only
 be active if hdmi is on. [[https://stackoverflow.com/questions/5813195/detecting-if-the-monitor-is-powered-off][ddcontrol]] might help here. Unfortunatly it
 does not. It seems there is no way to learn, that a display connected
 via hdmi is indeed on or tuned to the hdmi connection.
 
+*** Photos.app
+**** Favorites
+sqlite3 tmp/photos.db "select imagePath from RKVersion inner join RKMaster where RKVersion.isFavorite = 1 and RKMaster.uuid = RKVersion.masterUuid;"
+
+**** List all albums
+sqlite3 tmp/photos.db "select modelId,name from RKAlbum where RKAlbum.albumSubclass==3 and RKAlbum.isInTrash==0;"
+
+**** List images in album
+sqlite3 tmp/photos.db "select RKMaster.modelId,RKMaster.imagePath from RKMaster,RKVersion,RKAlbumVersion where RKAlbumVersion.albumId==58780 and RKAlbumVersion.versionId==RKVersion.modelId and RKVersion.masterId==RKMaster.modelId and RKMaster.isInTrash==0;"

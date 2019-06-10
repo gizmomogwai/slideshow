@@ -4,8 +4,6 @@ import com.flopcode.slideshow.database.Database;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.OverlayLayout;
-import javax.swing.Timer;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 
@@ -22,29 +20,24 @@ public class Main {
 
         Database db = Database.fromPath(args[0]);
 
-        Slideshow imageList = Slideshow.fromDatabase(db, screenSize);
-
-        Statistics statistics = new Statistics(db);
-        statistics.setVisible(true);
+        Slideshow slideshow = Slideshow.fromDatabase(db, screenSize);
+        slideshow.setPreferredSize(screenSize);
+        slideshow.setSize(screenSize);
 
         JFrame root = new JFrame("Slideshow");
         root.setUndecorated(true);
         root.setBounds(0, 0, screenSize.width, screenSize.height);
 
-        JPanel all = new JPanel();
-        all.setLayout(new OverlayLayout(all));
-        all.add(statistics);
-        all.add(imageList);
-        root.setContentPane(all);
+        JPanel all = (JPanel) root.getContentPane();
+        all.setPreferredSize(screenSize);
+        all.setLayout(null);
+        all.add(slideshow);
 
+        root.pack();
+        root.setResizable(false);
         root.setVisible(true);
 
-        new Timer(1000 / 60, e -> {
-            try {
-                imageList.setOffset(imageList.getOffset() + 1);
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }).start();
+        slideshow.run();
     }
+
 }
