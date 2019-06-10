@@ -1,3 +1,4 @@
+# coding: utf-8
 SSH_TARGET = "pi@192.168.0.140"
 
 TARGET_PATH = "/home/pi/Pictures/ImageLib"
@@ -47,7 +48,14 @@ task :copy_images_to_slideshow do
   lines.each do |file|
     
     path = File.dirname(file)
-    ssh_path = path.gsub(" ", "-")
+    ssh_path = path
+                 .gsub(" ", "-")
+                 .gsub("ö", "oe")
+                 .gsub("ä", "ae")
+                 .gsub("ü", "ue")
+                 .gsub("Ä", "Ae")
+                 .gsub("Ö", "Oe")
+                 .gsub("Ü", "Ue")
 
     server_path = "/share/Qmultimedia/Slideshow/#{ssh_path}"
     maverick_path = "#{masters}/#{file}"
