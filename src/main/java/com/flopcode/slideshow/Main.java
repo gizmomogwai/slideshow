@@ -7,6 +7,21 @@ import javax.swing.JPanel;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 
+/**
+ * Filescanner scans the filesystem and sends images to the database (image + date)
+ * Database gets an filter and provides images on request (filtered) this is an asyn operation.
+ * maximum 1 request can be open
+ * ImageLoader loads and scales images. it gets an load requests and completes it
+ * Slideshow renders the animation as soon as the first image comes in
+ *   e.g. by incrementing an offset and sending this to
+ *
+ * SlideshowLoader acts on the current offset, removes past images, requests new from the database, loads them and provides them then to the slideshow
+ *
+ * startup
+ * slideshow renders at the beginning, but does not advance
+ * filescanner picks up a file sends it to database
+ * database filters new images if it sees a request it completes this request
+ */
 public class Main {
 
     public static void main(String[] args) throws Exception {
@@ -15,8 +30,8 @@ public class Main {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         System.out.println("screenSize = " + screenSize);
-//         screenSize.width /= 3;
-//         screenSize.height /= 3;
+         screenSize.width /= 2;
+         screenSize.height /= 2;
 
         Database db = Database.fromPath(args[0]);
 

@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -80,7 +81,7 @@ public class Slideshow extends Canvas {
         this.offset = offset;
     }
 
-    public void run() {
+    public void run() throws Exception {
         createBufferStrategy(2);
         BufferStrategy buffers = getBufferStrategy();
         while (true) {
@@ -89,6 +90,7 @@ public class Slideshow extends Canvas {
             paintComponent(graphics);
             graphics.dispose();
             buffers.show();
+            Thread.sleep(100);
         }
     }
 
@@ -105,36 +107,46 @@ public class Slideshow extends Canvas {
 
         public void setOffset(Slideshow slideshow, int offset) {
             pool.submit(() -> {
-                expireImages(slideshow, offset);
-                loadNewImages(slideshow, offset);
+                try {
+                    expireImages(slideshow, offset);
+                    loadNewImages(slideshow, offset);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
         }
 
         private void loadNewImages(Slideshow slideshow, int offset) {
-            while (true) {
-                if (slideshow.images.size() > 0) {
-                    SlideshowImage last = slideshow.images.get(slideshow.images.size() - 1);
-                    if (last.offset > offset + slideshow.screenSize.width) {
-                        break;
+            try {
+                while (true) {
+                    if (slideshow.images.size() > 0) {
+                        SlideshowImage last = slideshow.images.get(slideshow.images.size() - 1);
+                        if (last.offset > offset + slideshow.screenSize.width) {
+                            break;
+                        }
+                    }
+                    try {
+                        DatabaseImage i = slideshow.database.next();
+                        if (i == null) {
+                            break;
+                        }
+                        Stopwatch stopwatch = Stopwatch.createStarted();
+                        BufferedImage originalImage = ImageIO.read(i.getFile());
+                        System.out.println("time for reading image " + i.getFile() + ": " + stopwatch.elapsed());
+                        stopwatch.reset().start();
+                        Image scaledImage = originalImage.getScaledInstance(-1, slideshow.screenSize.height, SCALE_SMOOTH);
+                        System.out.println("time for scaling image " + i.getFile() + ": " + stopwatch.elapsed());
+                        SlideshowImage image = new SlideshowImage(scaledImage, i, slideshow.totalX, slideshow.font, slideshow.fontMetrics);
+                        slideshow.totalX += image.image.getWidth(null);
+                        synchronized (slideshow.images) {
+                            slideshow.images.add(image);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
-                try {
-                    DatabaseImage i = slideshow.database.next();
-
-                    Stopwatch stopwatch = Stopwatch.createStarted();
-                    BufferedImage originalImage = ImageIO.read(i.getFile());
-                    System.out.println("time for reading image " + i.getFile() + ": " + stopwatch.elapsed());
-                    stopwatch.reset().start();
-                    Image scaledImage = originalImage.getScaledInstance(-1, slideshow.screenSize.height, SCALE_SMOOTH);
-                    System.out.println("time for scaling image " + i.getFile() + ": " + stopwatch.elapsed());
-                    SlideshowImage image = new SlideshowImage(scaledImage, i, slideshow.totalX, slideshow.font, slideshow.fontMetrics);
-                    slideshow.totalX += image.image.getWidth(null);
-                    synchronized (slideshow.images) {
-                        slideshow.images.add(image);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 

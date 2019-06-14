@@ -24,48 +24,83 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 public class Database {
 
-    GoodImages goodImages;
+    List<DatabaseImage> allImages = new ArrayList<>();
+    GoodImages goodImages = new GoodImages(new ArrayList<>());
 
     List<Listener> listeners = new ArrayList<>();
+    CountDownLatch usable = new CountDownLatch(1);
 
-    public Database() {
+    private Database() {
     }
 
-    public static Database fromPath(String path) throws IOException {
-        Database res = new Database();
-        List<DatabaseImage> allImages = new ArrayList<>();
+    public static Database fromPath(String path) {
+        return new Database().scan(path);
+    }
 
-        long startTime = System.currentTimeMillis();
-        String s = Paths.get(path).normalize().toAbsolutePath().toString();
-        String pattern = "glob:" + s + "/**.{jpg,JPG,jpeg,JPEG}";
-        final PathMatcher matcher = FileSystems.getDefault().getPathMatcher(pattern);
-        Files.walkFileTree(Paths.get(path).toAbsolutePath(), new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                if (matcher.matches(file)) {
-                    try {
-                        allImages.add(DatabaseImage.create(file));
-                    } catch (Exception e) {
-                        System.out.println("Problems with " + file + ": " + e.getMessage());
-                        e.printStackTrace();
+    private Database scan(String path) {
+        new Thread(() -> {
+            try {
+                long startTime = System.currentTimeMillis();
+                String s = Paths.get(path).normalize().toAbsolutePath().toString();
+                String pattern = "glob:" + s + "/**.{jpg,JPG,jpeg,JPEG}";
+                final PathMatcher matcher = FileSystems.getDefault().getPathMatcher(pattern);
+                Files.walkFileTree(Paths.get(path).toAbsolutePath(), new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                        if (matcher.matches(file)) {
+                            try {
+                                addImage(DatabaseImage.create(file));
+                            } catch (Exception e) {
+                                System.out.println("Problems with " + file + ": " + e.getMessage());
+                                e.printStackTrace();
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
                     }
-                }
-                return FileVisitResult.CONTINUE;
-            }
 
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                return FileVisitResult.CONTINUE;
+                    @Override
+                    public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+                long endTime = System.currentTimeMillis();
+                System.out.println("read database of " + allImages.size() + " in " + (endTime - startTime) / 1000 + "s");
+                finished();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        });
-        long endTime = System.currentTimeMillis();
-        System.out.println("read database of " + allImages.size() + " in " + (endTime - startTime) / 1000 + "s");
-        res.goodImages = new GoodImages(allImages);
-        return res;
+        }).start();
+        return this;
     }
+
+    long lastUpdate;
+    private synchronized void addImage(DatabaseImage databaseImage) {
+        allImages.add(databaseImage);
+        if (System.currentTimeMillis() - lastUpdate > 1000) {
+            goodImages = new GoodImages(allImages);
+            if (goodImages.goodImages.size() > 0) {
+                System.out.println("Database.addImage - los gehts");
+                usable.countDown();
+            }
+            notifyListeners();
+            lastUpdate = System.currentTimeMillis();
+        }
+    }
+    private void finished() {
+        goodImages = new GoodImages(allImages);
+        notifyListeners();
+    }
+
+    public void notifyListeners() {
+        for (Listener l : listeners) {
+            l.databaseChanged(this);
+        }
+    }
+
 
     public Database addListener(Listener l) {
         listeners.add(l);
@@ -81,8 +116,11 @@ public class Database {
         return goodImages.goodImages.size();
     }
 
-    public DatabaseImage next() {
-        return goodImages.next(this, listeners);
+    public synchronized DatabaseImage next() throws Exception {
+        usable.await();
+        DatabaseImage next = goodImages.next(this);
+        System.out.println("Database.next -> " + next);
+        return next;
     }
 
     public interface Listener {

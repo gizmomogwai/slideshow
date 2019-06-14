@@ -24,42 +24,89 @@ def server
   "qnappi"
 end
 
-JPG_PATTERN = Regexp.new(".*(jpg|jpeg|png)", Regexp::IGNORECASE)
-def jpg?(file)
-  JPG_PATTERN.match(file)
+class Image
+  attr_reader :path
+  def initialize(path, orientation)
+    @path = path
+    @orientation = orientation
+  end
+  def normalize(base, tmp_file)
+    p = File.join(base, @path)
+    
+    command =
+      case @orientation
+      when "1"
+        "cp \"#{p}\" #{tmp_file}"
+      when "8"
+        "jpegtran -rotate 270 \"#{p}\" > #{tmp_file}"
+      when "3"
+        "jpegtran -rotate 180 \"#{p}\" > #{tmp_file}"
+      when "6"
+        "jpegtran -rotate 90 \"#{p}\" > #{tmp_file}"
+      else
+        raise "Cannot handle #{@orientation} for #{p}"
+      end
+    puts(command)
+    res = system(command + @orientation + ".jpg")
+    if res == false
+      raise "Cannot execute command"
+    end
+    tmp_file
+  end
+  JPG_PATTERN = Regexp.new(".*(jpg|jpeg|png)", Regexp::IGNORECASE)
+  def jpg?
+    JPG_PATTERN.match(@path)
+  end
+end
+
+
+def parse(lines)
+  lines
+    .split("\n")
+    .map{ |line| line.split("|") }
+    .map{ |path, orientation| Image.new(path, orientation) }
 end
 
 desc "Copy images to slideshow server"
 task :copy_images_to_slideshow do
-  photos_lib = "/Users/monica/Pictures/Photos Library.photoslibrary"
-  sh "cp \"#{photos_lib}/database/photos.db\" /Users/monica/tmp/"
-  command = 'sqlite3 /Users/monica/tmp/photos.db "select imagePath from RKVersion inner join RKMaster where RKVersion.isFavorite = 1 and RKMaster.uuid = RKVersion.masterUuid;"'
+  home = ENV["HOME"]
+  photos_lib = "#{home}/Pictures/Photos Library.photoslibrary"
+  sh "cp \"#{photos_lib}/database/photos.db\" #{home}/tmp/"
+  puts "copy done"
+  command = "sqlite3 #{home}/tmp/photos.db \"select imagePath,RKVersion.orientation,RKVersion.isFavorite from RKVersion inner join RKMaster where RKVersion.isFavorite = 1 and RKMaster.uuid = RKVersion.masterUuid;\""
   output = `#{command}`
+  puts "command done ->\n#{output}"
   if not $?.success?
     raise "Cannot run #{command}"
   end
 
   masters = "#{photos_lib}/Masters"
-  lines = output.split("\n")
-  puts "#{lines.count} images alltogether"
-  lines = lines.filter{|file|jpg?(file)}
-  puts "#{lines.count} jpg/jpeg/png images"
+  images = parse(output)
+  puts "#{images.count} images alltogether"
+  images = images.filter{|image|image.jpg?()}
+  puts "#{images.count} jpg/jpeg/png images"
   
-  lines.each do |file|
+  images.each do |image|
+    begin
+      image.normalize(masters, "/tmp/transformed")
     
-    path = File.dirname(file)
-    ssh_path = path.gsub(" ", "-")
+      path = File.dirname(image.path)
+      ssh_path = path.gsub(" ", "-")
 
-    server_path = "/share/Qmultimedia/Slideshow/#{ssh_path}"
-    maverick_path = "#{masters}/#{file}"
-    if File.exist?(maverick_path)
-      sh "ssh #{server} mkdir -p #{server_path}"
-      sh "scp -r \"#{maverick_path}\" '#{server}:#{server_path}'"
-    else
-      puts "Missing file on maverick: #{maverick_path}"
+      server_path = "/share/Qmultimedia/Slideshow/#{ssh_path}"
+      maverick_path = "#{masters}/#{file}"
+      if File.exist?(maverick_path)
+        #sh "ssh #{server} mkdir -p #{server_path}"
+        #sh "scp -r \"#{maverick_path}\" '#{server}:#{server_path}'"
+      else
+        puts "Missing file on maverick: #{maverick_path}"
+      end
+    rescue => e
+      puts e
+      puts e.backtrace
     end
   end
-  sh 'rm tmp/photos.db'
+  sh "rm #{home}/tmp/photos.db"
 end
 
 task :default => [:deploy]

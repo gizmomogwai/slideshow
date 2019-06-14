@@ -32,6 +32,9 @@ does not. It seems there is no way to learn, that a display connected
 via hdmi is indeed on or tuned to the hdmi connection.
 
 *** Photos.app
+*** Example
+https://gist.github.com/bartonp/867f5187935d88a903395b6833a6fdf8
+
 **** Favorites
 sqlite3 tmp/photos.db "select imagePath from RKVersion inner join RKMaster where RKVersion.isFavorite = 1 and RKMaster.uuid = RKVersion.masterUuid;"
 
@@ -40,3 +43,11 @@ sqlite3 tmp/photos.db "select modelId,name from RKAlbum where RKAlbum.albumSubcl
 
 **** List images in album
 sqlite3 tmp/photos.db "select RKMaster.modelId,RKMaster.imagePath from RKMaster,RKVersion,RKAlbumVersion where RKAlbumVersion.albumId==58780 and RKAlbumVersion.versionId==RKVersion.modelId and RKVersion.masterId==RKMaster.modelId and RKMaster.isInTrash==0;"
+
+**** Orientation
+is stored in the RKVersion table in the orientation column
+1 - no rotation
+8 - rotate to left
+3 - rotate twice to left
+6 - rotate 3 times to left
+

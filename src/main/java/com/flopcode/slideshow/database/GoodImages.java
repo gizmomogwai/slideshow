@@ -41,15 +41,16 @@ public class GoodImages {
         return i.creationData.getMonth() == d.getMonth();
     }
 
-    public DatabaseImage next(Database database, List<Database.Listener> listeners) {
+    public DatabaseImage next(Database database) {
         if (!now.isEqual(LocalDate.now())) {
             calcGoodImages(allImages);
         }
-        int index = (int)Math.floor(Math.random() * goodImages.size());
-        DatabaseImage res = goodImages.get(index);
-        for (Database.Listener l : listeners) {
-            l.databaseChanged(database);
+        int index = (int) Math.floor(Math.random() * goodImages.size());
+        if (index >= goodImages.size()) {
+            return null;
         }
+        DatabaseImage res = goodImages.get(index);
+        database.notifyListeners();
         return res;
     }
 }
