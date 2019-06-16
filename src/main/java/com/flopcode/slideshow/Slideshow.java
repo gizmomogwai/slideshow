@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -90,7 +89,6 @@ public class Slideshow extends Canvas {
             paintComponent(graphics);
             graphics.dispose();
             buffers.show();
-            Thread.sleep(100);
         }
     }
 

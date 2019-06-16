@@ -30,8 +30,8 @@ public class Main {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         System.out.println("screenSize = " + screenSize);
-         screenSize.width /= 2;
-         screenSize.height /= 2;
+         // screenSize.width /= 2;
+         // screenSize.height /= 2;
 
         Database db = Database.fromPath(args[0]);
 

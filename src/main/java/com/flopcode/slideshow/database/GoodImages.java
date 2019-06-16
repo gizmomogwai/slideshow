@@ -31,7 +31,7 @@ public class GoodImages {
         now = LocalDate.now();
         List<DatabaseImage> goodImages = allImages
                 .stream()
-                .filter(i -> sameMonth(now, i))
+             //   .filter(i -> sameMonth(now, i))
                 .collect(Collectors.toList());
         goodImages.sort(new DatabaseImageComparator(now));
         this.goodImages = goodImages;
