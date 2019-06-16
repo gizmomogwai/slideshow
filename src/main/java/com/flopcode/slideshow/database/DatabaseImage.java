@@ -1,16 +1,19 @@
 package com.flopcode.slideshow.database;
 
 import com.drew.imaging.ImageMetadataReader;
+import com.drew.lang.GeoLocation;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
+import com.drew.metadata.exif.GpsDirectory;
 import com.drew.metadata.jpeg.JpegDirectory;
 
 import java.awt.Dimension;
 import java.io.File;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Date;
@@ -22,21 +25,32 @@ import static java.nio.channels.Channels.newInputStream;
 
 public class DatabaseImage {
     public final LocalDate creationData;
+    public final GeoLocation geoLocation;
     final Path path;
     final Dimension size;
 
-    public DatabaseImage(Path path, Dimension size, LocalDate creationData) {
+    public DatabaseImage(Path path, Dimension size, LocalDate creationData, GeoLocation geoLocation) {
         this.path = path;
         this.size = size;
         this.creationData = creationData;
+        this.geoLocation = geoLocation;
     }
 
     public static DatabaseImage create(Path path) throws Exception {
         Metadata metadata = readMetadata(path);
         // printMetadata(path, metadata);
         Dimension size = getSize(path, metadata);
+        GeoLocation gps = getGps(path, metadata);
         LocalDate creationDate = getCreationDate(path, metadata);
-        return new DatabaseImage(path, size, creationDate);
+        return new DatabaseImage(path, size, creationDate, gps);
+    }
+
+    private static GeoLocation getGps(Path path, Metadata metadata) {
+        GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
+        if (gpsDirectory != null) {
+            return gpsDirectory.getGeoLocation();
+        }
+        return null;
     }
 
     private static Metadata readMetadata(Path path) throws Exception {
@@ -95,7 +109,16 @@ public class DatabaseImage {
         }
     }
 
+    public static DatabaseImage dummy() {
+        return new DatabaseImage(Paths.get("."), new Dimension(1, 1), LocalDate.now(), null);
+    }
+
     public File getFile() {
         return path.toFile();
+    }
+
+    @Override
+    public String toString() {
+        return "DatabaseImage(file=" + getFile() + ")";
     }
 }

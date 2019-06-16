@@ -30,7 +30,8 @@ public class MotionDetector extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                sendMessageDelayed(new Message(), 60000);
+                sendMessageDelayed(new Message(), 50000);
+                msg.recycle();
             }
         };
         activate.sendMessage(new Message());

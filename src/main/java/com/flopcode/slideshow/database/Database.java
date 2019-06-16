@@ -50,6 +50,7 @@ public class Database extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                msg.recycle();
             }
         };
         imageRequest = new Handler(getLooper()) {
@@ -65,6 +66,7 @@ public class Database extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                msg.recycle();
             }
         };
 

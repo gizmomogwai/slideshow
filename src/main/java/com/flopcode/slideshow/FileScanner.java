@@ -38,7 +38,6 @@ public class FileScanner extends Thread {
                         try {
                             DatabaseImage dbImage = DatabaseImage.create(file);
                             fileReceiver.sendMessage(new Message().setData(new Bundle().putObject("image", dbImage)));
-                            Thread.sleep(1000);
                         } catch (Exception e) {
                             System.out.println("Problems with " + file + ": " + e.getMessage());
                             e.printStackTrace();

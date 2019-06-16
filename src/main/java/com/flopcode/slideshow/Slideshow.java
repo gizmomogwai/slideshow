@@ -1,7 +1,6 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.DatabaseImage;
-import com.google.common.base.Stopwatch;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
@@ -10,27 +9,23 @@ import mindroid.os.Message;
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
 import java.awt.Canvas;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.time.LocalDate;
 import java.util.concurrent.CountDownLatch;
 
 import static java.awt.Color.BLACK;
 import static java.awt.Image.SCALE_SMOOTH;
-import static java.awt.RenderingHints.KEY_ANTIALIASING;
-import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 
 public class Slideshow extends HandlerThread {
 
     private final Handler database;
+    private final GeoLocationCache geoLocationCache;
     public SlideshowCanvas canvas;
     private Handler imageAvailable;
     private Handler nextStep;
@@ -39,19 +34,21 @@ public class Slideshow extends HandlerThread {
     public Handler resume;
     private boolean paused = false;
 
+
     class SlideshowCanvas extends Canvas {
         private BufferStrategy buffers;
         private final Dimension screenSize;
         private Font font;
         private FontMetrics fontMetrics;
-        DatabaseImage current;
-        Image currentImage;
+
+        SlideshowImage current;
 
         SlideshowCanvas(Handler db, Dimension screenSize) throws Exception {
             setIgnoreRepaint(true);
-            font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf")).deriveFont(64f);
+            font = Font.createFont(Font.TRUETYPE_FONT, getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf")).deriveFont(48f);
             fontMetrics = getFontMetrics(font);
             this.screenSize = screenSize;
+            current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY), font, fontMetrics, geoLocationCache);
         }
 
         Graphics2D getGraphics2D(Dimension screenSize) {
@@ -69,87 +66,37 @@ public class Slideshow extends HandlerThread {
             if (next == null) {
                 throw new IllegalArgumentException();
             }
-            Image nextImage = loadImage(next.getFile(), screenSize);
-
+            SlideshowImage nextImage = new SlideshowImage(next, loadImage(next.getFile(), screenSize), font, fontMetrics, geoLocationCache);
 
             for (float i = 0; i < 1; i += 0.02) {
                 Graphics2D g = getGraphics2D(screenSize);
-                if (current != null) {
-                    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1-i));
-                    render(g, screenSize, current, currentImage);
-                }
-                if (next != null) {
-                    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, i));
-                    render(g, screenSize, next, nextImage);
-                }
+                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1 - i));
+                current.render(g, screenSize);
+                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, i));
+                nextImage.render(g, screenSize);
                 g.dispose();
                 buffers.show();
             }
 
-            current = next;
-            currentImage = nextImage;
+            current.dispose();
+
+            current = nextImage;
             Graphics2D g = getGraphics2D(screenSize);
-            render(g, screenSize, current, currentImage);
+            current.render(g, screenSize);
             g.dispose();
             buffers.show();
         }
 
-        public void render(Graphics2D g, Dimension screenSize, DatabaseImage dbImage, Image image) {
-            center(g, screenSize, image);
-            title(g, screenSize, dbImage);
-        }
-
-        private void title(Graphics graphics, Dimension screenSize, DatabaseImage dbImage) {
-            LocalDate now = LocalDate.now();
-            String text = textForDate(now, dbImage);
-            Graphics2D g2d = (Graphics2D) graphics;
-            g2d.setFont(font);
-            g2d.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-
-            int x = fontMetrics.getMaxDescent() + 5;
-            int y = screenSize.height - fontMetrics.getMaxDescent() - 5;
-            g2d.setColor(Color.black);
-            g2d.drawString(text, x - 1, y - 1);
-            g2d.drawString(text, x + 1, y - 1);
-            g2d.drawString(text, x + 1, y + 1);
-            g2d.drawString(text, x - 1, y + 1);
-            g2d.setColor(Color.white);
-            g2d.drawString(text, x, y);
-        }
-
-        private String textForDate(LocalDate now, DatabaseImage databaseImage) {
-            if (databaseImage.creationData.getMonth() == now.getMonth()) {
-                if (databaseImage.creationData.getDayOfMonth() == now.getDayOfMonth()) {
-                    int yearDelta = now.getYear() - databaseImage.creationData.getYear();
-                    if (yearDelta == 1) {
-                        return "On this day last year";
-                    } else {
-                        return "On this day " + yearDelta + " years ago";
-                    }
-                }
-            }
-            return String.format("%d-%02d-%02d", databaseImage.creationData.getYear(),
-                    databaseImage.creationData.getMonth().getValue(),
-                    databaseImage.creationData.getDayOfMonth());
-        }
-
-        private void clear(Graphics graphics, Dimension screenSize) {
-            graphics.setColor(BLACK);
-            graphics.fillRect(0, 0, screenSize.width, screenSize.height);
-        }
-
-        private void center(Graphics graphics, Dimension screenSize, Image image) {
-            graphics.drawImage(image, (screenSize.width - image.getWidth(null)) / 2, (screenSize.height - image.getHeight(null)) / 2, null);
-        }
-
         Image loadImage(File file, Dimension screenSize) throws Exception {
-
-            Stopwatch stopwatch = Stopwatch.createStarted();
-            BufferedImage originalImage = ImageIO.read(file);
-            System.out.println("time for reading image " + file + ": " + stopwatch.elapsed());
-            stopwatch.reset().start();
-
-            return fit(originalImage, screenSize);
+            try {
+                BufferedImage originalImage = ImageIO.read(file);
+                Image result = fit(originalImage, screenSize);
+                originalImage.flush();
+                return result;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
         }
 
         @SuppressWarnings("unused")
@@ -168,6 +115,8 @@ public class Slideshow extends HandlerThread {
     public Slideshow(Handler db, Dimension screenSize) throws Exception {
         this.database = db;
         canvas = new SlideshowCanvas(db, screenSize);
+        geoLocationCache = new GeoLocationCache();
+
         start();
     }
 
@@ -181,16 +130,21 @@ public class Slideshow extends HandlerThread {
         imageAvailable = new Handler(getLooper()) {
             @Override
             public void handleMessage(Message msg) {
+                DatabaseImage newImage = (DatabaseImage) msg.getData().getObject("image");
                 try {
-                    DatabaseImage newImage = (DatabaseImage) msg.getData().getObject("image");
-                    System.out.println("Slideshow.handleMessage - got image");
+                    if (newImage == null) {
+                        throw new IllegalArgumentException();
+                    }
+                    System.out.println("Slideshow.handleMessage - got image " + newImage);
                     if (!paused) {
                         canvas.transitionTo(newImage);
-                        nextStep.sendMessageDelayed(new Message(), 4000);
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
+                    System.out.println("Slideshow.handleMessage - cannot handle " + newImage);
                     e.printStackTrace();
                 }
+                nextStep.sendMessageDelayed(new Message(), 2000);
+                msg.recycle();
             }
         };
         nextStep = new Handler(getLooper()) {
@@ -202,6 +156,7 @@ public class Slideshow extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                msg.recycle();
             }
         };
         pause = new Handler(getLooper()) {
@@ -213,6 +168,7 @@ public class Slideshow extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                msg.recycle();
             }
         };
         resume = new Handler(getLooper()) {
@@ -224,6 +180,7 @@ public class Slideshow extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                msg.recycle();
             }
 
         };

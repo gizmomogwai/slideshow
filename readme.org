@@ -51,3 +51,6 @@ is stored in the RKVersion table in the orientation column
 3 - rotate twice to left
 6 - rotate 3 times to left
 
+
+*** Reverse geocoding
+https://nominatim.org/release-docs/develop/api/Reverse/
