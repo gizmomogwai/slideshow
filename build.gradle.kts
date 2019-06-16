@@ -17,6 +17,14 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
 }
 
+sourceSets {
+    main {
+        java {
+            setSrcDirs(listOf("src/main/java", "Mindroid.java/src"))
+        }
+    }
+}
+
 application {
     mainClassName = "com.flopcode.slideshow.Main"
 }

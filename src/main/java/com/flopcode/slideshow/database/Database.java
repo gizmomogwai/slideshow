@@ -1,17 +1,9 @@
-/*
- * Copyright (c) 2019 E.S.R.Labs. All rights reserved.
- *
- * NOTICE:  All information contained herein is, and remains
- * the property of E.S.R.Labs and its suppliers, if any.
- * The intellectual and technical concepts contained herein are
- * proprietary to E.S.R.Labs and its suppliers and may be covered
- * by German and Foreign Patents, patents in process, and are protected
- * by trade secret or copyright law.
- * Dissemination of this information or reproduction of this material
- * is strictly forbidden unless prior written permission is obtained
- * from E.S.R.Labs.
- */
 package com.flopcode.slideshow.database;
+
+import mindroid.os.Bundle;
+import mindroid.os.Handler;
+import mindroid.os.HandlerThread;
+import mindroid.os.Message;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -26,19 +18,57 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-public class Database {
+public class Database extends HandlerThread {
 
+    public Handler fileReceiver;
     List<DatabaseImage> allImages = new ArrayList<>();
     GoodImages goodImages = new GoodImages(new ArrayList<>());
 
     List<Listener> listeners = new ArrayList<>();
     CountDownLatch usable = new CountDownLatch(1);
+    public Handler imageRequest;
+    private Handler requestor = null;
 
-    private Database() {
+
+    public Database() throws Exception {
+        start();
+        usable.await();
     }
 
-    public static Database fromPath(String path) {
-        return new Database().scan(path);
+    @Override
+    protected void onLooperPrepared() {
+        super.onLooperPrepared();
+        fileReceiver = new Handler(getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                try {
+                    DatabaseImage image = (DatabaseImage) msg.getData().getObject("image");
+                    if (image == null) {
+                        throw new IllegalArgumentException("expected image in bundle");
+                    }
+                    addImage(image);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        imageRequest = new Handler(getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                try {
+                    System.out.println("Database.handleMessage - imagerequest");
+                    requestor = (Handler) msg.getData().getObject("requestor");
+                    if (requestor == null) {
+                        throw new IllegalArgumentException("expected requestor in bundle");
+                    }
+                    sendBackToRequestor();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        usable.countDown();
     }
 
     private Database scan(String path) {
@@ -77,9 +107,12 @@ public class Database {
         return this;
     }
 
-    long lastUpdate;
-    private synchronized void addImage(DatabaseImage databaseImage) {
+    private void addImage(DatabaseImage databaseImage) {
         allImages.add(databaseImage);
+        sendBackToRequestor();
+/*
+
+
         if (System.currentTimeMillis() - lastUpdate > 1000) {
             goodImages = new GoodImages(allImages);
             if (goodImages.goodImages.size() > 0) {
@@ -89,7 +122,20 @@ public class Database {
             notifyListeners();
             lastUpdate = System.currentTimeMillis();
         }
+        */
+
     }
+
+    private void sendBackToRequestor() {
+        if (requestor != null) {
+            DatabaseImage nextImage = next();
+            if (nextImage != null) {
+                requestor.sendMessage(new Message().setData(new Bundle().putObject("image", nextImage)));
+                requestor = null;
+            }
+        }
+    }
+
     private void finished() {
         goodImages = new GoodImages(allImages);
         notifyListeners();
@@ -116,11 +162,13 @@ public class Database {
         return goodImages.goodImages.size();
     }
 
-    public synchronized DatabaseImage next() throws Exception {
-        usable.await();
-        DatabaseImage next = goodImages.next(this);
-        System.out.println("Database.next -> " + next);
-        return next;
+    public DatabaseImage next() {
+        int index = (int) Math.floor(Math.random() * allImages.size());
+        if (index >= allImages.size()) {
+            return null;
+        }
+
+        return allImages.get(index);
     }
 
     public interface Listener {
