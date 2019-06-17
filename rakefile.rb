@@ -66,6 +66,7 @@ def parse(lines)
     .map{ |line| line.split("|") }
     .map{ |path, orientation| Image.new(path, orientation) }
 end
+
 require 'yaml'
 def load_done
   if File.exist?("done.yaml")
@@ -74,11 +75,13 @@ def load_done
     return {}
   end
 end
+
 def save_done(done)
   File.open("done.yaml", "w") do |io|
     io.puts(done.to_yaml)
   end
 end
+
 desc "Copy images to slideshow server"
 task :copy_images_to_slideshow do
   home = ENV["HOME"]
