@@ -116,7 +116,7 @@ task :copy_images_to_slideshow do
 
       server_path = "/share/Qmultimedia/Slideshow/#{ssh_path}"
       sh "ssh #{server} mkdir -p #{server_path}"
-      sh "scp -r \"#{local_file}\" '#{server}:#{server_path}/#{File.basename(image.path)}'"
+      sh "scp -r \"#{local_file}\" \"#{server}:'#{server_path}/#{File.basename(image.path)}'\""
 
       done[image.path] = true
       save_done(done)
