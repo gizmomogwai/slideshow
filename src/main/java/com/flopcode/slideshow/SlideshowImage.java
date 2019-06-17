@@ -16,8 +16,6 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.io.StringWriter;
@@ -25,41 +23,29 @@ import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.awt.RenderingHints.KEY_ANTIALIASING;
-import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static javax.xml.xpath.XPathConstants.STRING;
 
-public class SlideshowImage {
-    final Image image;
+class SlideshowImage {
+    private final Image image;
     private final Font font;
-    private final FontMetrics metrics;
     private final GeoLocationCache geoLocationCache;
-    final DatabaseImage databaseImage;
-    final String dateText;
-    static private XPathExpression cityExpression;
-    static private XPathExpression townExpression;
-    static private XPathExpression hamletExpression;
-    static private XPathExpression islandExpression;
-    static private XPathExpression countyExpression;
+    static private XPathExpression[] detailExpressions;
     static private XPathExpression countryExpression;
-    private final String locationText;
-    private final String yearText;
     private final String title;
 
-    public SlideshowImage(DatabaseImage databaseImage, Image image, Font font, FontMetrics metrics, GeoLocationCache geoLocationCache) {
-        this.databaseImage = databaseImage;
+    SlideshowImage(DatabaseImage databaseImage, Image image, Font font, GeoLocationCache geoLocationCache) {
         this.image = image;
         this.font = font;
-        this.metrics = metrics;
         this.geoLocationCache = geoLocationCache;
         LocalDate now = LocalDate.now();
-        this.dateText = textForDate(now, databaseImage);
-        this.yearText = textForDeltaYears(now, databaseImage);
-        this.locationText = textForLocation(databaseImage);
-        this.title = Stream.of(dateText, yearText, locationText).filter((i) -> i != null).collect(Collectors.joining(" / "));
+        String dateText = textForDate(now, databaseImage);
+        String yearText = textForDeltaYears(now, databaseImage);
+        String locationText = textForLocation(databaseImage);
+        this.title = Stream.of(dateText, yearText, locationText).filter(Objects::nonNull).collect(Collectors.joining(" / "));
     }
 
 
@@ -67,11 +53,13 @@ public class SlideshowImage {
         XPathFactory xPathfactory = XPathFactory.newInstance();
         XPath xpath = xPathfactory.newXPath();
         try {
-            cityExpression = xpath.compile("reversegeocode/addressparts/city/text()");
-            townExpression = xpath.compile("reversegeocode/addressparts/town/text()");
-            hamletExpression = xpath.compile("reversegeocode/addressparts/hamlet/text()");
-            islandExpression = xpath.compile("reversegeocode/addressparts/island/text()");
-            countyExpression = xpath.compile("reversegeocode/addressparts/county/text()");
+            detailExpressions = new XPathExpression[]{
+                    xpath.compile("reversegeocode/addressparts/city/text()"),
+                    xpath.compile("reversegeocode/addressparts/town/text()"),
+                    xpath.compile("reversegeocode/addressparts/hamlet/text()"),
+                    xpath.compile("reversegeocode/addressparts/island/text()"),
+                    xpath.compile("reversegeocode/addressparts/county/text()"),
+            };
             countryExpression = xpath.compile("reversegeocode/addressparts/country_code/text()");
         } catch (XPathExpressionException e) {
             e.printStackTrace();
@@ -85,8 +73,7 @@ public class SlideshowImage {
 
         try {
             URL requestUrl = new URL("https://nominatim.openstreetmap.org/reverse?format=json&lat=" + databaseImage.geoLocation.getLatitude() + "&lon=" + databaseImage.geoLocation.getLongitude() + "&zoom=10&addressdetails=1&format=xml");
-            return geoLocationCache.get(requestUrl, (URL url) -> {
-                System.out.println("url = " + url);
+            return geoLocationCache.get(requestUrl, (url) -> {
                 URLConnection connection = url.openConnection();
                 connection.setRequestProperty("User-Agent", "slideshow");
                 connection.connect();
@@ -96,8 +83,10 @@ public class SlideshowImage {
                 Document document = documentBuilder.parse(connection.getInputStream());
                 prettyPrint(document);
                 String country = ((String) countryExpression.evaluate(document, STRING)).toUpperCase();
-                String detail = getFromXml(document, cityExpression, islandExpression, townExpression, hamletExpression, countyExpression);
-                return Stream.of(detail, country).filter((i) -> i != null).collect(Collectors.joining(", "));
+                String detail = getFromXml(document, detailExpressions);
+                return Stream.of(detail, country)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.joining(", "));
             });
         } catch (Exception e) {
             e.printStackTrace();
@@ -113,6 +102,7 @@ public class SlideshowImage {
                     return value;
                 }
             } catch (XPathExpressionException e) {
+                // ignore
             }
         }
         return null;
@@ -170,29 +160,16 @@ public class SlideshowImage {
                 databaseImage.creationData.getDayOfMonth());
     }
 
-    private String textForDate(LocalDate now) {
-        if (databaseImage.creationData.getMonth() == now.getMonth()) {
-            if (databaseImage.creationData.getDayOfMonth() == now.getDayOfMonth()) {
-                int yearDelta = now.getYear() - databaseImage.creationData.getYear();
-                if (yearDelta == 1) {
-                    return "On this day last year";
-                } else {
-                    return "On this day " + yearDelta + " years ago";
-                }
-            }
-        }
-        return String.format("%d-%02d-%02d", databaseImage.creationData.getYear(),
-                databaseImage.creationData.getMonth().getValue(),
-                databaseImage.creationData.getDayOfMonth());
-    }
-
-    public void dispose() {
+    void dispose() {
         image.flush();
     }
 
-    public void render(Graphics2D graphics, Dimension screenSize) {
+    void render(Graphics2D graphics, Dimension screenSize) {
         center(graphics, screenSize, image);
-        text(graphics, title, screenSize, screenSize.height - metrics.getMaxDescent() - 5);
+
+        graphics.setColor(new Color(0, 0, 0, 0.7f));
+        graphics.fillRect(0, screenSize.height - 60, screenSize.width, 60);
+        text(graphics, title, screenSize.height - font.metrics.getMaxDescent() - 5);
         //text(graphics, locationText, screenSize, screenSize.height - metrics.getAscent() * 2 - 5);
     }
 
@@ -200,22 +177,22 @@ public class SlideshowImage {
         graphics.drawImage(image, (screenSize.width - image.getWidth(null)) / 2, (screenSize.height - image.getHeight(null)) / 2, null);
     }
 
-    private void text(Graphics2D graphics, String text, Dimension screenSize, int y) {
-        graphics.setFont(font);
-        graphics.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-
-        int x = metrics.getMaxDescent() + 5;
+    private void text(Graphics2D graphics, String text, int y) {
+        graphics.setFont(font.font);
+        int x = font.metrics.getMaxDescent() + 5;
+/*
         graphics.setColor(Color.black);
 
-        for (int i=-1;i<=1;++i) {
-            for (int j=-1;j<=1;++j) {
+        for (int i = -1; i <= 1; ++i) {
+
+            for (int j = -1; j <= 1; ++j) {
                 if (i != 0 && j != 0) {
                     graphics.drawString(text, x - i, y - j);
                 }
             }
         }
+ */
         graphics.setColor(Color.white);
         graphics.drawString(text, x, y);
     }
-
 }

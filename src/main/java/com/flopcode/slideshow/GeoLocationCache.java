@@ -27,21 +27,21 @@ public class GeoLocationCache {
         R apply(T t) throws E;
     }
 
-    HashMap<URL, String> map = new HashMap<>();
+    private HashMap<URL, String> map = new HashMap<>();
     private String CACHE_FILENAME = "geolocation.cache";
 
     GeoLocationCache() {
-        try {
-            load();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        load();
     }
 
-    private void load() throws Exception {
-        ObjectInputStream data = new ObjectInputStream(new FileInputStream(CACHE_FILENAME));
-        map = (HashMap<URL, String>) data.readObject();
-        data.close();
+    private void load() {
+        try {
+            ObjectInputStream data = new ObjectInputStream(new FileInputStream(CACHE_FILENAME));
+            map = (HashMap<URL, String>) data.readObject();
+            data.close();
+        } catch (Exception e) {
+            map = new HashMap<>();
+        }
     }
 
     private void save() throws Exception {
@@ -50,7 +50,7 @@ public class GeoLocationCache {
         out.close();
     }
 
-    int requestedElements = 0;
+    private int requestedElements = 0;
 
     public String get(URL url, Function<URL, String, Exception> getter) {
         if (!map.containsKey(url)) {
