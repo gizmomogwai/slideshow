@@ -4,4 +4,7 @@
 # Ignore Gradle build output directory
 build
 .idea
-/slideshow.iml
+slideshow.iml
+done.yaml
+geolocation.cache
+out
