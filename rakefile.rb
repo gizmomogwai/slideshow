@@ -47,7 +47,7 @@ class Image
         raise "Cannot handle #{@orientation} for #{p}"
       end
     puts(command)
-    res = system(command + @orientation + ".jpg")
+    res = system(command)
     if res == false
       raise "Cannot execute command"
     end
@@ -66,7 +66,19 @@ def parse(lines)
     .map{ |line| line.split("|") }
     .map{ |path, orientation| Image.new(path, orientation) }
 end
-
+require 'yaml'
+def load_done
+  if File.exist?("done.yaml")
+    return YAML.load(File.read("done.yaml"))
+  else
+    return {}
+  end
+end
+def save_done(done)
+  File.open("done.yaml", "w") do |io|
+    io.puts(done.to_yaml)
+  end
+end
 desc "Copy images to slideshow server"
 task :copy_images_to_slideshow do
   home = ENV["HOME"]
@@ -85,22 +97,26 @@ task :copy_images_to_slideshow do
   puts "#{images.count} images alltogether"
   images = images.filter{|image|image.jpg?()}
   puts "#{images.count} jpg/jpeg/png images"
-  
+
+  done = load_done()
   images.each do |image|
-    begin
-      image.normalize(masters, "/tmp/transformed")
+    if done.include?(image.path)
+      puts "already transferred #{image.path}"
+      next
+    end
     
+    begin
+      local_file = image.normalize(masters, "/tmp/transformed")
+      
       path = File.dirname(image.path)
       ssh_path = path.gsub(" ", "-")
 
       server_path = "/share/Qmultimedia/Slideshow/#{ssh_path}"
-      maverick_path = "#{masters}/#{file}"
-      if File.exist?(maverick_path)
-        #sh "ssh #{server} mkdir -p #{server_path}"
-        #sh "scp -r \"#{maverick_path}\" '#{server}:#{server_path}'"
-      else
-        puts "Missing file on maverick: #{maverick_path}"
-      end
+      sh "ssh #{server} mkdir -p #{server_path}"
+      sh "scp -r \"#{local_file}\" '#{server}:#{server_path}/#{File.basename(image.path)}'"
+
+      done[image.path] = true
+      save_done(done)
     rescue => e
       puts e
       puts e.backtrace
