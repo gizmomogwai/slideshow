@@ -1,6 +1,7 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.DatabaseImage;
+import com.google.common.collect.Sets;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
@@ -18,6 +19,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.TextStyle;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -31,6 +33,7 @@ class SlideshowCanvas extends Canvas {
     private final com.flopcode.slideshow.Font subtitles;
     private final com.flopcode.slideshow.Font calendar;
     private final com.flopcode.slideshow.Font today;
+    private final PublicHolidays publicHolidays;
     private BufferStrategy buffers;
     private final Dimension screenSize;
 
@@ -45,6 +48,7 @@ class SlideshowCanvas extends Canvas {
         today = new com.flopcode.slideshow.Font(this, font.deriveFont(Font.BOLD, 28f));
         this.screenSize = screenSize;
         current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY), subtitles, geoLocationCache);
+        publicHolidays = new PublicHolidays();
     }
 
     private Graphics2D getGraphics2D(Dimension screenSize) {
@@ -114,8 +118,10 @@ class SlideshowCanvas extends Canvas {
         int i = 1;
         ColorScheme whiteOrBlack = new ColorScheme(Color.white, Color.black);
         ColorScheme redOrBlack = new ColorScheme(Color.red, Color.black);
+        ColorScheme publicHoliday = new ColorScheme(Color.orange, Color.black);
         while (current.getMonthValue() == now.getMonthValue()) {
-            ColorScheme cs = current.getDayOfWeek() == DayOfWeek.SUNDAY ? redOrBlack : whiteOrBlack;
+            ColorScheme cs = publicHolidays.isPublicHoliday(current) ? publicHoliday :
+                    current.getDayOfWeek() == DayOfWeek.SUNDAY ? redOrBlack : whiteOrBlack;
             boolean renderingCurrentDay = current.equals(now);
             centerDay(g, current, 230, i++, renderingCurrentDay ? today : smallFont, renderingCurrentDay, cs);
             current = current.plusDays(1);
@@ -183,6 +189,32 @@ class SlideshowCanvas extends Canvas {
         ColorScheme(Color normalColor, Color onWhiteColor) {
             this.normalColor = normalColor;
             this.onWhiteColor = onWhiteColor;
+        }
+    }
+
+    private static class PublicHolidays {
+        HashSet<LocalDate> publicHolidays = Sets.newHashSet(
+                LocalDate.of(2019, 1, 1),
+                LocalDate.of(2019, 1, 6),
+                LocalDate.of(2019, 4, 19),
+                LocalDate.of(2019, 4, 21),
+                LocalDate.of(2019, 4, 22),
+                LocalDate.of(2019, 5, 1),
+                LocalDate.of(2019, 5, 30),
+                LocalDate.of(2019, 6, 9),
+                LocalDate.of(2019, 6, 10),
+                LocalDate.of(2019, 6, 20),
+                LocalDate.of(2019, 8, 15),
+                LocalDate.of(2019, 10, 3),
+                LocalDate.of(2019, 11, 1),
+                LocalDate.of(2019, 12, 24),
+                LocalDate.of(2019, 12, 25),
+                LocalDate.of(2019, 12, 26),
+                LocalDate.of(2019, 12, 31)
+        );
+
+        boolean isPublicHoliday(LocalDate date) {
+            return publicHolidays.contains(date);
         }
     }
 }
