@@ -45,7 +45,7 @@ class SlideshowImage {
         String dateText = textForDate(now, databaseImage);
         String yearText = textForDeltaYears(now, databaseImage);
         String locationText = textForLocation(databaseImage);
-        this.title = Stream.of(dateText, yearText, locationText).filter(Objects::nonNull).collect(Collectors.joining(" / "));
+        this.title = Stream.of(dateText, yearText, locationText).filter(Objects::nonNull).collect(Collectors.joining(" | "));
     }
 
 
@@ -68,7 +68,7 @@ class SlideshowImage {
 
     private String textForLocation(DatabaseImage databaseImage) {
         if (databaseImage.geoLocation == null) {
-            return "guess!";
+            return "Guess!";
         }
 
         try {
