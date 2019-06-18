@@ -194,6 +194,7 @@ class SlideshowCanvas extends Canvas {
 
     private static class PublicHolidays {
         HashSet<LocalDate> publicHolidays = Sets.newHashSet(
+                // 2019
                 LocalDate.of(2019, 1, 1),
                 LocalDate.of(2019, 1, 6),
                 LocalDate.of(2019, 4, 19),
@@ -210,7 +211,24 @@ class SlideshowCanvas extends Canvas {
                 LocalDate.of(2019, 12, 24),
                 LocalDate.of(2019, 12, 25),
                 LocalDate.of(2019, 12, 26),
-                LocalDate.of(2019, 12, 31)
+                LocalDate.of(2019, 12, 31),
+                // 2020
+                LocalDate.of(2020, 1,1),
+                LocalDate.of(2020, 1,6),
+                LocalDate.of(2020, 4,10),
+                LocalDate.of(2020, 4,12),
+                LocalDate.of(2020, 5,1),
+                LocalDate.of(2020, 5,21),
+                LocalDate.of(2020, 5,31),
+                LocalDate.of(2020, 6,1),
+                LocalDate.of(2020, 6,11),
+                LocalDate.of(2020, 8, 15),
+                LocalDate.of(2020, 10,3),
+                LocalDate.of(2020, 11,1),
+                LocalDate.of(2020, 12,24),
+                LocalDate.of(2020, 12,25),
+                LocalDate.of(2020, 12,26),
+                LocalDate.of(2020, 12,31)
         );
 
         boolean isPublicHoliday(LocalDate date) {
