@@ -13,11 +13,11 @@ public class Slideshow extends HandlerThread {
 
     private final Handler database;
     SlideshowCanvas canvas;
+    Handler pause;
+    Handler resume;
     private Handler imageAvailable;
     private Handler nextStep;
     private CountDownLatch ready = new CountDownLatch(1);
-    Handler pause;
-    Handler resume;
     private boolean paused = false;
 
 

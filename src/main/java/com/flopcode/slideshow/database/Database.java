@@ -12,10 +12,9 @@ import java.util.concurrent.CountDownLatch;
 public class Database extends HandlerThread {
 
     public Handler fileReceiver;
-
+    public Handler imageRequest;
     private List<DatabaseImage> allImages = new ArrayList<>();
     private CountDownLatch usable = new CountDownLatch(1);
-    public Handler imageRequest;
     private Handler requester = null;
 
 

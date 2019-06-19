@@ -30,8 +30,8 @@ public class Main {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         System.out.println("screenSize = " + screenSize);
-         // screenSize.width /= 2;
-         // screenSize.height /= 2;
+        // screenSize.width /= 2;
+        // screenSize.height /= 2;
 
         Database db = new Database();
         FileScanner scanner = new FileScanner(db.fileReceiver, args[0]);

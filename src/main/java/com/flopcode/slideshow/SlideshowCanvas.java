@@ -5,8 +5,10 @@ import com.google.common.collect.Sets;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -15,39 +17,36 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.Month;
-import java.time.format.TextStyle;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
 
+import static java.awt.AlphaComposite.SRC_OVER;
 import static java.awt.Color.BLACK;
+import static java.awt.Font.TRUETYPE_FONT;
+import static java.awt.Font.createFont;
 import static java.awt.Image.SCALE_SMOOTH;
 import static java.awt.RenderingHints.KEY_ANTIALIASING;
 import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
+import static java.awt.image.BufferedImage.TYPE_BYTE_GRAY;
+import static java.time.DayOfWeek.SUNDAY;
+import static java.time.format.TextStyle.SHORT_STANDALONE;
 
 class SlideshowCanvas extends Canvas {
     private final GeoLocationCache geoLocationCache;
-    private final com.flopcode.slideshow.Font subtitles;
-    private final com.flopcode.slideshow.Font calendar;
-    private final com.flopcode.slideshow.Font today;
     private final PublicHolidays publicHolidays;
-    private BufferStrategy buffers;
     private final Dimension screenSize;
-
+    private Fonts fonts;
+    private BufferStrategy buffers;
     private SlideshowImage current;
 
     SlideshowCanvas(Dimension screenSize, GeoLocationCache geoLocationCache) throws Exception {
         this.geoLocationCache = geoLocationCache;
         setIgnoreRepaint(true);
-        Font font = Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf")));
-        subtitles = new com.flopcode.slideshow.Font(this, font.deriveFont(48f));
-        calendar = new com.flopcode.slideshow.Font(this, font.deriveFont(20f));
-        today = new com.flopcode.slideshow.Font(this, font.deriveFont(32f));
+        fonts = new Fonts(this, createFont(TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf"))));
         this.screenSize = screenSize;
-        current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY), subtitles, geoLocationCache);
+        current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, TYPE_BYTE_GRAY), fonts.subtitles, geoLocationCache);
         publicHolidays = new PublicHolidays();
     }
 
@@ -66,17 +65,17 @@ class SlideshowCanvas extends Canvas {
         if (next == null) {
             throw new IllegalArgumentException();
         }
-        SlideshowImage nextImage = new SlideshowImage(next, loadImage(next.getFile(), screenSize), subtitles, geoLocationCache);
+        SlideshowImage nextImage = new SlideshowImage(next, loadImage(next.getFile(), screenSize), fonts.subtitles, geoLocationCache);
 
         for (float i = 0; i < 1; i += 0.02) {
             Graphics2D g = getGraphics2D(screenSize);
             g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1 - i));
+            g.setComposite(AlphaComposite.getInstance(SRC_OVER, 1 - i));
             current.render(g, screenSize);
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, i));
+            g.setComposite(AlphaComposite.getInstance(SRC_OVER, i));
             nextImage.render(g, screenSize);
 
-            renderCalendar(g, screenSize, subtitles, calendar, today);
+            renderCalendar(g, screenSize, fonts);
 
             g.dispose();
             buffers.show();
@@ -89,71 +88,19 @@ class SlideshowCanvas extends Canvas {
         g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
         current.render(g, screenSize);
 
-        renderCalendar(g, screenSize, subtitles, calendar, today);
+        renderCalendar(g, screenSize, fonts);
 
         g.dispose();
         buffers.show();
     }
 
-    private void renderCalendar(Graphics2D g, Dimension screenSize, com.flopcode.slideshow.Font bigFont, com.flopcode.slideshow.Font smallFont, com.flopcode.slideshow.Font today) {
+    private void renderCalendar(Graphics2D g, Dimension screenSize, Fonts fonts) {
         Locale locale = Locale.ENGLISH;
-        // background
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
-        g.setColor(new Color(0, 0, 0, 0.7f));
-        g.fillRect(0, 0, screenSize.width, 120);
-
-        // left side
         LocalDate now = LocalDate.now();
-        g.setFont(bigFont.font);
-        g.setColor(Color.WHITE);
-        int year = now.getYear();
-        Month month = now.getMonth();
-        String dateFirstLine = now.getDayOfWeek().getDisplayName(TextStyle.SHORT_STANDALONE, locale) + " " + now.getDayOfMonth() + ".";
-        g.drawString(dateFirstLine, 20, 50);
-        String dateSecondLine = month.getDisplayName(TextStyle.SHORT_STANDALONE, locale) + " " + year;
-        g.drawString(dateSecondLine, 20, 100);
 
-        // dateline
-        LocalDate current = LocalDate.of(year, month, 1);
-        int i = 1;
-        ColorScheme whiteOrBlack = new ColorScheme(Color.white);
-        ColorScheme redOrBlack = new ColorScheme(Color.red);
-        ColorScheme publicHoliday = new ColorScheme(new Color(0x71A95A));
-        while (current.getMonthValue() == now.getMonthValue()) {
-            ColorScheme cs = publicHolidays.isPublicHoliday(current) ? publicHoliday :
-                    current.getDayOfWeek() == DayOfWeek.SUNDAY ? redOrBlack : whiteOrBlack;
-            boolean renderingCurrentDay = current.equals(now);
-            centerDay(g, current, 230, i++, renderingCurrentDay ? today : smallFont, renderingCurrentDay, cs);
-            current = current.plusDays(1);
-        }
-    }
-
-    private void centerDay(Graphics2D g, LocalDate date, int offset, int i, com.flopcode.slideshow.Font font, boolean currentDay, ColorScheme cs) {
-        int deltaX = 40;
-        g.setFont(font.font);
-
-        String dayOfMonth = "" + date.getDayOfMonth();
-        String dayOfWeek = ("" + date.getDayOfWeek()).substring(0, 1);
-
-        Rectangle2D bounds = font.metrics.getStringBounds(dayOfMonth, g);
-        Rectangle2D dayOfWeekBounds = font.metrics.getStringBounds(dayOfWeek, g);
-
-        int width = (int) Math.max(bounds.getWidth(), dayOfWeekBounds.getWidth());
-        int yOffset = 0;
-        if (currentDay) {
-            yOffset = 4; // compensate for bigger font
-            int border = 3;
-            g.setColor(new Color(1, 1, 1, 0.9f));
-            int upperBorder = font.metrics.getMaxAscent();
-            g.drawRect(offset + i * deltaX - width / 2 - border, 50 - upperBorder + yOffset, width + 2 * border, 25 + upperBorder + font.metrics.getMaxDescent());
-        }
-        g.setColor(cs.normalColor);
-        g.drawString(dayOfMonth, offset + i * deltaX - ((int) bounds.getWidth() / 2), 50);
-        g.drawString(dayOfWeek, offset + i * deltaX - ((int) dayOfWeekBounds.getWidth() / 2), 75 + yOffset);
-    }
-
-    private Rectangle2D grow(Rectangle2D r, int border) {
-        return new Rectangle2D.Double(r.getX() - border, r.getY() - border, r.getWidth() + 2 * border, r.getHeight() + 2 * border);
+        CalendarBackground.render(g, screenSize);
+        CalendarDate.render(g, fonts.subtitles, now, locale);
+        CalendarLine.render(g, 230, fonts.calendar, fonts.todays, now, publicHolidays);
     }
 
     private Image loadImage(File file, Dimension screenSize) throws Exception {
@@ -178,6 +125,18 @@ class SlideshowCanvas extends Canvas {
     @SuppressWarnings("unused")
     private Image scaleToHeight(BufferedImage image, Dimension size) {
         return image.getScaledInstance(-1, size.height, SCALE_SMOOTH);
+    }
+
+    static class Fonts {
+        private final com.flopcode.slideshow.Font subtitles;
+        private final com.flopcode.slideshow.Font calendar;
+        private final com.flopcode.slideshow.Font todays;
+
+        Fonts(Component c, Font baseFont) {
+            this.subtitles = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(48f));
+            this.calendar = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(20f));
+            this.todays = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(32f));
+        }
     }
 
     private static class ColorScheme {
@@ -229,6 +188,71 @@ class SlideshowCanvas extends Canvas {
 
         boolean isPublicHoliday(LocalDate date) {
             return publicHolidays.contains(date);
+        }
+    }
+
+    private static class CalendarLine {
+        private static final int FIRST_LINE_Y = 50;
+        private static final int SECOND_LINE_Y = 75;
+        private static final int STEP_WIDTH = 40;
+
+        static void render(Graphics2D g, int offset, com.flopcode.slideshow.Font smallFont, com.flopcode.slideshow.Font today, LocalDate now, PublicHolidays publicHolidays) {
+            LocalDate current = LocalDate.of(now.getYear(), now.getMonth(), 1);
+            int i = 1;
+            ColorScheme whiteOrBlack = new ColorScheme(Color.white);
+            ColorScheme redOrBlack = new ColorScheme(Color.red);
+            ColorScheme publicHoliday = new ColorScheme(new Color(0x71A95A));
+            while (current.getMonthValue() == now.getMonthValue()) {
+                ColorScheme cs = publicHolidays.isPublicHoliday(current) ? publicHoliday :
+                        current.getDayOfWeek() == SUNDAY ? redOrBlack : whiteOrBlack;
+                boolean renderingCurrentDay = current.equals(now);
+                centerDay(g, current, offset, i++, renderingCurrentDay ? today : smallFont, renderingCurrentDay, cs);
+                current = current.plusDays(1);
+            }
+        }
+
+        static private void centerDay(Graphics2D g, LocalDate date, int offset, int i, com.flopcode.slideshow.Font font, boolean currentDay, ColorScheme cs) {
+            g.setFont(font.font);
+
+            String dayOfMonth = "" + date.getDayOfMonth();
+            String dayOfWeek = ("" + date.getDayOfWeek()).substring(0, 1);
+
+            Rectangle2D bounds = font.metrics.getStringBounds(dayOfMonth, g);
+            Rectangle2D dayOfWeekBounds = font.metrics.getStringBounds(dayOfWeek, g);
+
+            int width = (int) Math.max(bounds.getWidth(), dayOfWeekBounds.getWidth());
+            int yOffset = 0;
+            if (currentDay) {
+                yOffset = 4; // compensate for bigger font
+                int border = 3;
+                g.setColor(new Color(1, 1, 1, 0.9f));
+                int upperBorder = font.metrics.getMaxAscent();
+                g.drawRect(offset + i * STEP_WIDTH - width / 2 - border, FIRST_LINE_Y - upperBorder + yOffset, width + 2 * border, 25 + upperBorder + font.metrics.getMaxDescent());
+            }
+            g.setColor(cs.normalColor);
+            g.drawString(dayOfMonth, offset + i * STEP_WIDTH - ((int) bounds.getWidth() / 2), FIRST_LINE_Y);
+            g.drawString(dayOfWeek, offset + i * STEP_WIDTH - ((int) dayOfWeekBounds.getWidth() / 2), SECOND_LINE_Y + yOffset);
+        }
+
+    }
+
+    private static class CalendarBackground {
+        static void render(Graphics2D g, Dimension screenSize) {
+            g.setComposite(AlphaComposite.getInstance(SRC_OVER, 1.0f));
+            g.setColor(new Color(0, 0, 0, 0.7f));
+            g.setStroke(new BasicStroke(1.5f));
+            g.fillRect(0, 0, screenSize.width, 120);
+        }
+    }
+
+    private static class CalendarDate {
+        static void render(Graphics2D g, com.flopcode.slideshow.Font bigFont, LocalDate now, Locale locale) {
+            g.setFont(bigFont.font);
+            g.setColor(Color.WHITE);
+            String dateFirstLine = now.getDayOfWeek().getDisplayName(SHORT_STANDALONE, locale) + " " + now.getDayOfMonth() + ".";
+            String dateSecondLine = now.getMonth().getDisplayName(SHORT_STANDALONE, locale) + " " + now.getYear();
+            g.drawString(dateFirstLine, 20, 50);
+            g.drawString(dateSecondLine, 20, 100);
         }
     }
 }

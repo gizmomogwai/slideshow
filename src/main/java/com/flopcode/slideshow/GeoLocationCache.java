@@ -22,13 +22,9 @@ import java.util.HashMap;
 
 public class GeoLocationCache {
 
-    @FunctionalInterface
-    public interface Function<T, R, E extends Throwable> {
-        R apply(T t) throws E;
-    }
-
     private HashMap<URL, String> map = new HashMap<>();
     private String CACHE_FILENAME = "geolocation.cache";
+    private int requestedElements = 0;
 
     GeoLocationCache() {
         load();
@@ -50,8 +46,6 @@ public class GeoLocationCache {
         out.close();
     }
 
-    private int requestedElements = 0;
-
     public String get(URL url, Function<URL, String, Exception> getter) {
         if (!map.containsKey(url)) {
             try {
@@ -71,5 +65,10 @@ public class GeoLocationCache {
             }
         }
         return map.get(url);
+    }
+
+    @FunctionalInterface
+    public interface Function<T, R, E extends Throwable> {
+        R apply(T t) throws E;
     }
 }

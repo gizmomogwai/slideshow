@@ -30,24 +30,8 @@ import java.util.stream.Stream;
 import static javax.xml.xpath.XPathConstants.STRING;
 
 class SlideshowImage {
-    private final Image image;
-    private final Font font;
-    private final GeoLocationCache geoLocationCache;
     static private XPathExpression[] detailExpressions;
     static private XPathExpression countryExpression;
-    private final String title;
-
-    SlideshowImage(DatabaseImage databaseImage, Image image, Font font, GeoLocationCache geoLocationCache) {
-        this.image = image;
-        this.font = font;
-        this.geoLocationCache = geoLocationCache;
-        LocalDate now = LocalDate.now();
-        String dateText = textForDate(now, databaseImage);
-        String yearText = textForDeltaYears(now, databaseImage);
-        String locationText = textForLocation(databaseImage);
-        this.title = Stream.of(dateText, yearText, locationText).filter(Objects::nonNull).collect(Collectors.joining(" | "));
-    }
-
 
     static {
         XPathFactory xPathfactory = XPathFactory.newInstance();
@@ -64,6 +48,23 @@ class SlideshowImage {
         } catch (XPathExpressionException e) {
             e.printStackTrace();
         }
+    }
+
+    private final Image image;
+    private final Font font;
+    private final GeoLocationCache geoLocationCache;
+    private final String title;
+
+
+    SlideshowImage(DatabaseImage databaseImage, Image image, Font font, GeoLocationCache geoLocationCache) {
+        this.image = image;
+        this.font = font;
+        this.geoLocationCache = geoLocationCache;
+        LocalDate now = LocalDate.now();
+        String dateText = textForDate(now, databaseImage);
+        String yearText = textForDeltaYears(now, databaseImage);
+        String locationText = textForLocation(databaseImage);
+        this.title = Stream.of(dateText, yearText, locationText).filter(Objects::nonNull).collect(Collectors.joining(" | "));
     }
 
     private String textForLocation(DatabaseImage databaseImage) {
