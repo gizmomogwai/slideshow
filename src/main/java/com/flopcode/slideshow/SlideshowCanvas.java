@@ -100,7 +100,7 @@ class SlideshowCanvas extends Canvas {
 
         CalendarBackground.render(g, screenSize);
         CalendarDate.render(g, fonts.subtitles, now, locale);
-        CalendarLine.render(g, 230, fonts.calendar, fonts.todays, now, publicHolidays);
+        CalendarLine.render(g, 230, fonts.calendar, now, publicHolidays);
     }
 
     private Image loadImage(File file, Dimension screenSize) throws Exception {
@@ -130,12 +130,10 @@ class SlideshowCanvas extends Canvas {
     static class Fonts {
         private final com.flopcode.slideshow.Font subtitles;
         private final com.flopcode.slideshow.Font calendar;
-        private final com.flopcode.slideshow.Font todays;
 
         Fonts(Component c, Font baseFont) {
             this.subtitles = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(48f));
             this.calendar = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(20f));
-            this.todays = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(32f));
         }
     }
 
@@ -196,7 +194,7 @@ class SlideshowCanvas extends Canvas {
         private static final int SECOND_LINE_Y = 75;
         private static final int STEP_WIDTH = 40;
 
-        static void render(Graphics2D g, int offset, com.flopcode.slideshow.Font smallFont, com.flopcode.slideshow.Font today, LocalDate now, PublicHolidays publicHolidays) {
+        static void render(Graphics2D g, int offset, com.flopcode.slideshow.Font smallFont, LocalDate now, PublicHolidays publicHolidays) {
             LocalDate current = LocalDate.of(now.getYear(), now.getMonth(), 1);
             int i = 1;
             ColorScheme whiteOrBlack = new ColorScheme(Color.white);
@@ -206,7 +204,7 @@ class SlideshowCanvas extends Canvas {
                 ColorScheme cs = publicHolidays.isPublicHoliday(current) ? publicHoliday :
                         current.getDayOfWeek() == SUNDAY ? redOrBlack : whiteOrBlack;
                 boolean renderingCurrentDay = current.equals(now);
-                centerDay(g, current, offset, i++, renderingCurrentDay ? today : smallFont, renderingCurrentDay, cs);
+                centerDay(g, current, offset, i++, smallFont, renderingCurrentDay, cs);
                 current = current.plusDays(1);
             }
         }
@@ -221,17 +219,15 @@ class SlideshowCanvas extends Canvas {
             Rectangle2D dayOfWeekBounds = font.metrics.getStringBounds(dayOfWeek, g);
 
             int width = (int) Math.max(bounds.getWidth(), dayOfWeekBounds.getWidth());
-            int yOffset = 0;
             if (currentDay) {
-                yOffset = 4; // compensate for bigger font
                 int border = 3;
                 g.setColor(new Color(1, 1, 1, 0.9f));
                 int upperBorder = font.metrics.getMaxAscent();
-                g.drawRect(offset + i * STEP_WIDTH - width / 2 - border, FIRST_LINE_Y - upperBorder + yOffset, width + 2 * border, 25 + upperBorder + font.metrics.getMaxDescent());
+                g.drawRect(offset + i * STEP_WIDTH - width / 2 - border, FIRST_LINE_Y - upperBorder, width + 2 * border, 25 + upperBorder + font.metrics.getMaxDescent());
             }
             g.setColor(cs.normalColor);
             g.drawString(dayOfMonth, offset + i * STEP_WIDTH - ((int) bounds.getWidth() / 2), FIRST_LINE_Y);
-            g.drawString(dayOfWeek, offset + i * STEP_WIDTH - ((int) dayOfWeekBounds.getWidth() / 2), SECOND_LINE_Y + yOffset);
+            g.drawString(dayOfWeek, offset + i * STEP_WIDTH - ((int) dayOfWeekBounds.getWidth() / 2), SECOND_LINE_Y);
         }
 
     }
