@@ -45,7 +45,7 @@ class SlideshowCanvas extends Canvas {
         Font font = Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf")));
         subtitles = new com.flopcode.slideshow.Font(this, font.deriveFont(48f));
         calendar = new com.flopcode.slideshow.Font(this, font.deriveFont(20f));
-        today = new com.flopcode.slideshow.Font(this, font.deriveFont(Font.BOLD, 28f));
+        today = new com.flopcode.slideshow.Font(this, font.deriveFont(32f));
         this.screenSize = screenSize;
         current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY), subtitles, geoLocationCache);
         publicHolidays = new PublicHolidays();
@@ -116,9 +116,9 @@ class SlideshowCanvas extends Canvas {
         // dateline
         LocalDate current = LocalDate.of(year, month, 1);
         int i = 1;
-        ColorScheme whiteOrBlack = new ColorScheme(Color.white, Color.black);
-        ColorScheme redOrBlack = new ColorScheme(Color.red, Color.black);
-        ColorScheme publicHoliday = new ColorScheme(Color.orange, Color.black);
+        ColorScheme whiteOrBlack = new ColorScheme(Color.white);
+        ColorScheme redOrBlack = new ColorScheme(Color.red);
+        ColorScheme publicHoliday = new ColorScheme(new Color(0x71A95A));
         while (current.getMonthValue() == now.getMonthValue()) {
             ColorScheme cs = publicHolidays.isPublicHoliday(current) ? publicHoliday :
                     current.getDayOfWeek() == DayOfWeek.SUNDAY ? redOrBlack : whiteOrBlack;
@@ -139,19 +139,17 @@ class SlideshowCanvas extends Canvas {
         Rectangle2D dayOfWeekBounds = font.metrics.getStringBounds(dayOfWeek, g);
 
         int width = (int) Math.max(bounds.getWidth(), dayOfWeekBounds.getWidth());
-        int vOffset = 0;
+        int yOffset = 0;
         if (currentDay) {
-            vOffset = 5; // compensate for bigger font
+            yOffset = 4; // compensate for bigger font
             int border = 3;
             g.setColor(new Color(1, 1, 1, 0.9f));
             int upperBorder = font.metrics.getMaxAscent();
-            g.fillRect(offset + i * deltaX - width / 2 - border, 50 - upperBorder + vOffset, width + 2 * border, 25 + upperBorder + font.metrics.getMaxDescent());
-            g.setColor(cs.onWhiteColor);
-        } else {
-            g.setColor(cs.normalColor);
+            g.drawRect(offset + i * deltaX - width / 2 - border, 50 - upperBorder + yOffset, width + 2 * border, 25 + upperBorder + font.metrics.getMaxDescent());
         }
-        g.drawString(dayOfMonth, offset + i * deltaX - ((int) bounds.getWidth() / 2), 50 + vOffset);
-        g.drawString(dayOfWeek, offset + i * deltaX - ((int) dayOfWeekBounds.getWidth() / 2), 75 + vOffset);
+        g.setColor(cs.normalColor);
+        g.drawString(dayOfMonth, offset + i * deltaX - ((int) bounds.getWidth() / 2), 50);
+        g.drawString(dayOfWeek, offset + i * deltaX - ((int) dayOfWeekBounds.getWidth() / 2), 75 + yOffset);
     }
 
     private Rectangle2D grow(Rectangle2D r, int border) {
@@ -184,11 +182,9 @@ class SlideshowCanvas extends Canvas {
 
     private static class ColorScheme {
         final Color normalColor;
-        final Color onWhiteColor;
 
-        ColorScheme(Color normalColor, Color onWhiteColor) {
+        ColorScheme(Color normalColor) {
             this.normalColor = normalColor;
-            this.onWhiteColor = onWhiteColor;
         }
     }
 
@@ -213,22 +209,22 @@ class SlideshowCanvas extends Canvas {
                 LocalDate.of(2019, 12, 26),
                 LocalDate.of(2019, 12, 31),
                 // 2020
-                LocalDate.of(2020, 1,1),
-                LocalDate.of(2020, 1,6),
-                LocalDate.of(2020, 4,10),
-                LocalDate.of(2020, 4,12),
-                LocalDate.of(2020, 5,1),
-                LocalDate.of(2020, 5,21),
-                LocalDate.of(2020, 5,31),
-                LocalDate.of(2020, 6,1),
-                LocalDate.of(2020, 6,11),
+                LocalDate.of(2020, 1, 1),
+                LocalDate.of(2020, 1, 6),
+                LocalDate.of(2020, 4, 10),
+                LocalDate.of(2020, 4, 12),
+                LocalDate.of(2020, 5, 1),
+                LocalDate.of(2020, 5, 21),
+                LocalDate.of(2020, 5, 31),
+                LocalDate.of(2020, 6, 1),
+                LocalDate.of(2020, 6, 11),
                 LocalDate.of(2020, 8, 15),
-                LocalDate.of(2020, 10,3),
-                LocalDate.of(2020, 11,1),
-                LocalDate.of(2020, 12,24),
-                LocalDate.of(2020, 12,25),
-                LocalDate.of(2020, 12,26),
-                LocalDate.of(2020, 12,31)
+                LocalDate.of(2020, 10, 3),
+                LocalDate.of(2020, 11, 1),
+                LocalDate.of(2020, 12, 24),
+                LocalDate.of(2020, 12, 25),
+                LocalDate.of(2020, 12, 26),
+                LocalDate.of(2020, 12, 31)
         );
 
         boolean isPublicHoliday(LocalDate date) {
