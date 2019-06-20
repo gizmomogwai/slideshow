@@ -8,6 +8,7 @@ task :deploy do
   sh "./gradlew build"
   sh "ssh #{SSH_TARGET} mkdir -p #{TARGET_PATH}"
   sh "scp build/libs/slideshow-all.jar #{SSH_TARGET}:#{TARGET_PATH}"
+  sh "ssh #{SSH_TARGET} touch #{TARGET_PATH}/slideshow-all.jar-updated"
 end
 
 desc "Deploy images to target"

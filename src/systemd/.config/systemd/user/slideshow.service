@@ -1,0 +1,11 @@
+[Unit]
+Description=Slideshow
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi
+ExecStart=/home/pi/bin/jdk-12.0.1/bin/java -jar /home/pi/Pictures/ImageLib/slideshow-all.jar /mnt/Slideshow
+
+[Install]
+WantedBy=multi-user.target
