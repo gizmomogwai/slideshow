@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 import static java.awt.AlphaComposite.SRC_OVER;
 import static java.awt.Color.BLACK;
@@ -52,7 +53,7 @@ class SlideshowCanvas extends Canvas {
         publicHolidays = new PublicHolidays();
     }
 
-    private Graphics2D getGraphics2D(Dimension screenSize) {
+    private <T> void renderDoubleBuffered(Dimension screenSize, T context, BiConsumer<Graphics2D, T> renderer) {
         if (buffers == null) {
             createBufferStrategy(2);
             buffers = getBufferStrategy();
@@ -60,7 +61,7 @@ class SlideshowCanvas extends Canvas {
         Graphics2D g = (Graphics2D) buffers.getDrawGraphics();
         g.setColor(BLACK);
         g.fillRect(0, 0, screenSize.width, screenSize.height);
-        return g;
+        renderer.accept(g, context);
     }
 
     void transitionTo(DatabaseImage next) throws Exception {
@@ -70,32 +71,33 @@ class SlideshowCanvas extends Canvas {
         SlideshowImage nextImage = new SlideshowImage(next, loadImage(next.getFile(), screenSize), fonts.subtitles, geoLocationCache);
 
         for (float i = 0; i < 1; i += 0.02) {
-            Graphics2D g = getGraphics2D(screenSize);
-            g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-            g.setComposite(AlphaComposite.getInstance(SRC_OVER, 1 - i));
-            current.render(g, screenSize);
-            g.setComposite(AlphaComposite.getInstance(SRC_OVER, i));
-            nextImage.render(g, screenSize);
 
-            renderCalendar(g, screenSize, fonts);
+            renderDoubleBuffered(screenSize, i, (g, alpha) -> {
+                g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
+                g.setComposite(AlphaComposite.getInstance(SRC_OVER, 1 - alpha));
+                current.render(g, screenSize);
+                g.setComposite(AlphaComposite.getInstance(SRC_OVER, alpha));
+                nextImage.render(g, screenSize);
 
-            moon.getPhase().render(g, screenSize.width - 150, 10);
-            g.dispose();
-            buffers.show();
+                renderCalendar(g, screenSize, fonts);
+                renderMoon(g);
+            });
         }
 
         current.dispose();
-
         current = nextImage;
-        Graphics2D g = getGraphics2D(screenSize);
-        g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-        current.render(g, screenSize);
 
-        renderCalendar(g, screenSize, fonts);
+        renderDoubleBuffered(screenSize, null, (g, nothing) -> {
+            g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
+            current.render(g, screenSize);
 
-        moon.getPhase().render(g, screenSize.width - 150, 10);
-        g.dispose();
-        buffers.show();
+            renderCalendar(g, screenSize, fonts);
+            renderMoon(g);
+        });
+    }
+
+    private void renderMoon(Graphics2D g) {
+        moon.getPhase().render(g, screenSize.width - 100, 5);
     }
 
     private void renderCalendar(Graphics2D g, Dimension screenSize, Fonts fonts) {

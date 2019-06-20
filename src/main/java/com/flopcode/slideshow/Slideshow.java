@@ -7,7 +7,6 @@ import mindroid.os.HandlerThread;
 import mindroid.os.Message;
 
 import java.awt.Dimension;
-import java.util.concurrent.CountDownLatch;
 
 public class Slideshow extends HandlerThread {
 
@@ -17,7 +16,6 @@ public class Slideshow extends HandlerThread {
     Handler resume;
     private Handler imageAvailable;
     private Handler nextStep;
-    private CountDownLatch ready = new CountDownLatch(1);
     private boolean paused = false;
 
 
@@ -27,15 +25,6 @@ public class Slideshow extends HandlerThread {
         canvas = new SlideshowCanvas(screenSize, geoLocationCache);
 
         start();
-    }
-
-    void startup() throws Exception {
-        ready.await();
-        nextStep.sendMessage(new Message());
-    }
-
-    @Override
-    protected void onLooperPrepared() {
         imageAvailable = new Handler(getLooper()) {
             @Override
             public void handleMessage(Message msg) {
@@ -93,6 +82,9 @@ public class Slideshow extends HandlerThread {
             }
 
         };
-        ready.countDown();
+    }
+
+    void startup() {
+        nextStep.sendMessage(new Message());
     }
 }

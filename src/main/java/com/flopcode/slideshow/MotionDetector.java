@@ -14,10 +14,6 @@ public class MotionDetector extends HandlerThread {
         mPause = pause;
         mResume = resume;
         start();
-    }
-
-    @Override
-    protected void onLooperPrepared() {
         activate = new Handler(getLooper()) {
             @Override
             public void handleMessage(Message msg) {

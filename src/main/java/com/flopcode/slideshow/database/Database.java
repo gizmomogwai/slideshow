@@ -7,25 +7,17 @@ import mindroid.os.Message;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 public class Database extends HandlerThread {
 
     public Handler fileReceiver;
     public Handler imageRequest;
     private List<DatabaseImage> allImages = new ArrayList<>();
-    private CountDownLatch usable = new CountDownLatch(1);
     private Handler requester = null;
 
 
     public Database() throws Exception {
         start();
-        usable.await();
-    }
-
-    @Override
-    protected void onLooperPrepared() {
-        super.onLooperPrepared();
         fileReceiver = new Handler(getLooper()) {
             @Override
             public void handleMessage(Message msg) {
@@ -56,8 +48,6 @@ public class Database extends HandlerThread {
                 msg.recycle();
             }
         };
-
-        usable.countDown();
     }
 
     private void addImage(DatabaseImage databaseImage) {
