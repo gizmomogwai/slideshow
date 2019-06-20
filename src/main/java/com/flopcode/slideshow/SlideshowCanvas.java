@@ -62,6 +62,8 @@ class SlideshowCanvas extends Canvas {
         g.setColor(BLACK);
         g.fillRect(0, 0, screenSize.width, screenSize.height);
         renderer.accept(g, context);
+        g.dispose();
+        buffers.show();
     }
 
     void transitionTo(DatabaseImage next) throws Exception {

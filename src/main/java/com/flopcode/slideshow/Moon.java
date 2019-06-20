@@ -14,7 +14,7 @@ class Moon {
     private Phase current;
 
     Moon() throws Exception {
-        BufferedImage images = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("moon_blurred.png")));
+        BufferedImage images = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("moon_blurred_5.png")));
         current = new Phase(images, 0);
     }
 
