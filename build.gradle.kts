@@ -14,6 +14,8 @@ dependencies {
     implementation("com.drewnoakes:metadata-extractor:2.11.0")
     implementation("com.google.guava:guava:27.1-jre")
     implementation("com.pi4j:pi4j-core:1.2")
+    implementation("org.shredzone.commons:commons-suncalc:2.4")
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.4.2")
 }
 

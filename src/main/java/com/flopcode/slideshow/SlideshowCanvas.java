@@ -37,12 +37,14 @@ class SlideshowCanvas extends Canvas {
     private final GeoLocationCache geoLocationCache;
     private final PublicHolidays publicHolidays;
     private final Dimension screenSize;
+    private final Moon moon;
     private Fonts fonts;
     private BufferStrategy buffers;
     private SlideshowImage current;
 
     SlideshowCanvas(Dimension screenSize, GeoLocationCache geoLocationCache) throws Exception {
         this.geoLocationCache = geoLocationCache;
+        moon = new Moon();
         setIgnoreRepaint(true);
         fonts = new Fonts(this, createFont(TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf"))));
         this.screenSize = screenSize;
@@ -77,6 +79,7 @@ class SlideshowCanvas extends Canvas {
 
             renderCalendar(g, screenSize, fonts);
 
+            moon.getPhase().render(g, screenSize.width - 150, 10);
             g.dispose();
             buffers.show();
         }
@@ -90,6 +93,7 @@ class SlideshowCanvas extends Canvas {
 
         renderCalendar(g, screenSize, fonts);
 
+        moon.getPhase().render(g, screenSize.width - 150, 10);
         g.dispose();
         buffers.show();
     }
@@ -221,9 +225,9 @@ class SlideshowCanvas extends Canvas {
             int width = (int) Math.max(bounds.getWidth(), dayOfWeekBounds.getWidth());
             if (currentDay) {
                 int border = 3;
-                g.setColor(new Color(1, 1, 1, 0.9f));
+                g.setColor(new Color(1, 1, 1, 0.2f));
                 int upperBorder = font.metrics.getMaxAscent();
-                g.drawRect(offset + i * STEP_WIDTH - width / 2 - border, FIRST_LINE_Y - upperBorder, width + 2 * border, 25 + upperBorder + font.metrics.getMaxDescent());
+                g.fillRect(offset + i * STEP_WIDTH - width / 2 - border, FIRST_LINE_Y - upperBorder, width + 2 * border, 25 + upperBorder + font.metrics.getMaxDescent());
             }
             g.setColor(cs.normalColor);
             g.drawString(dayOfMonth, offset + i * STEP_WIDTH - ((int) bounds.getWidth() / 2), FIRST_LINE_Y);
