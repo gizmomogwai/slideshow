@@ -14,7 +14,7 @@ class Moon {
     private Phase current;
 
     Moon() throws Exception {
-        BufferedImage images = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("moon_blurred_5.png")));
+        BufferedImage images = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("moon_blurred_8.png")));
         current = new Phase(images, 0);
     }
 
@@ -43,7 +43,7 @@ class Moon {
             int index = (int) Math.round(((phase + 180.0) / 360.0) * 24.0);
             int row = index / 4;
             int column = index % 4;
-            return images.getSubimage(28 + column * 300, 28 + row * 300, 300, 300).getScaledInstance(100, -1, SCALE_AREA_AVERAGING);
+            return images.getSubimage(28 + column * 300, 28 + row * 300, 300, 300).getScaledInstance(50, -1, SCALE_AREA_AVERAGING);
         }
 
         Phase revalidateForToday() {

@@ -12,7 +12,6 @@ repositories {
 
 dependencies {
     implementation("com.drewnoakes:metadata-extractor:2.11.0")
-    implementation("com.google.guava:guava:27.1-jre")
     implementation("com.pi4j:pi4j-core:1.2")
     implementation("org.shredzone.commons:commons-suncalc:2.4")
 
@@ -44,6 +43,17 @@ tasks {
         manifest {
             attributes(mapOf("Main-Class" to application.mainClassName))
         }
+        exclude(
+                "moon.png",
+                "moon_blurred.png",
+                "moon_blurred_5.png",
+                "lib/bananapi/**/*",
+                "lib/bananapro/**/*",
+                "lib/bpi/**/*",
+                "lib/nanopi/**/*",
+                "lib/odroid/**/*",
+                "lib/orangepi/**/*"
+        )
     }
 }
 

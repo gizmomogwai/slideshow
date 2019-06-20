@@ -1,7 +1,6 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.DatabaseImage;
-import com.google.common.collect.Sets;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
@@ -18,6 +17,7 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
@@ -99,7 +99,7 @@ class SlideshowCanvas extends Canvas {
     }
 
     private void renderMoon(Graphics2D g) {
-        moon.getPhase().render(g, screenSize.width - 100, 5);
+        moon.getPhase().render(g, screenSize.width - 80, 30);
     }
 
     private void renderCalendar(Graphics2D g, Dimension screenSize, Fonts fonts) {
@@ -146,51 +146,59 @@ class SlideshowCanvas extends Canvas {
     }
 
     private static class ColorScheme {
-        final Color normalColor;
+        final Color normal;
+        final Color sunday;
+        final Color publicHoliday;
 
-        ColorScheme(Color normalColor) {
-            this.normalColor = normalColor;
+        private ColorScheme(Color normal, Color sunday, Color publicHoliday) {
+            this.normal = normal;
+            this.sunday = sunday;
+            this.publicHoliday = publicHoliday;
         }
     }
 
     private static class PublicHolidays {
-        HashSet<LocalDate> publicHolidays = Sets.newHashSet(
-                // 2019
-                LocalDate.of(2019, 1, 1),
-                LocalDate.of(2019, 1, 6),
-                LocalDate.of(2019, 4, 19),
-                LocalDate.of(2019, 4, 21),
-                LocalDate.of(2019, 4, 22),
-                LocalDate.of(2019, 5, 1),
-                LocalDate.of(2019, 5, 30),
-                LocalDate.of(2019, 6, 9),
-                LocalDate.of(2019, 6, 10),
-                LocalDate.of(2019, 6, 20),
-                LocalDate.of(2019, 8, 15),
-                LocalDate.of(2019, 10, 3),
-                LocalDate.of(2019, 11, 1),
-                LocalDate.of(2019, 12, 24),
-                LocalDate.of(2019, 12, 25),
-                LocalDate.of(2019, 12, 26),
-                LocalDate.of(2019, 12, 31),
-                // 2020
-                LocalDate.of(2020, 1, 1),
-                LocalDate.of(2020, 1, 6),
-                LocalDate.of(2020, 4, 10),
-                LocalDate.of(2020, 4, 12),
-                LocalDate.of(2020, 5, 1),
-                LocalDate.of(2020, 5, 21),
-                LocalDate.of(2020, 5, 31),
-                LocalDate.of(2020, 6, 1),
-                LocalDate.of(2020, 6, 11),
-                LocalDate.of(2020, 8, 15),
-                LocalDate.of(2020, 10, 3),
-                LocalDate.of(2020, 11, 1),
-                LocalDate.of(2020, 12, 24),
-                LocalDate.of(2020, 12, 25),
-                LocalDate.of(2020, 12, 26),
-                LocalDate.of(2020, 12, 31)
-        );
+        HashSet<LocalDate> publicHolidays = new HashSet<>();
+
+        {
+            publicHolidays.addAll(Arrays.asList(
+                    // 2019
+                    LocalDate.of(2019, 1, 1),
+                    LocalDate.of(2019, 1, 6),
+                    LocalDate.of(2019, 4, 19),
+                    LocalDate.of(2019, 4, 21),
+                    LocalDate.of(2019, 4, 22),
+                    LocalDate.of(2019, 5, 1),
+                    LocalDate.of(2019, 5, 30),
+                    LocalDate.of(2019, 6, 9),
+                    LocalDate.of(2019, 6, 10),
+                    LocalDate.of(2019, 6, 20),
+                    LocalDate.of(2019, 8, 15),
+                    LocalDate.of(2019, 10, 3),
+                    LocalDate.of(2019, 11, 1),
+                    LocalDate.of(2019, 12, 24),
+                    LocalDate.of(2019, 12, 25),
+                    LocalDate.of(2019, 12, 26),
+                    LocalDate.of(2019, 12, 31),
+                    // 2020
+                    LocalDate.of(2020, 1, 1),
+                    LocalDate.of(2020, 1, 6),
+                    LocalDate.of(2020, 4, 10),
+                    LocalDate.of(2020, 4, 12),
+                    LocalDate.of(2020, 5, 1),
+                    LocalDate.of(2020, 5, 21),
+                    LocalDate.of(2020, 5, 31),
+                    LocalDate.of(2020, 6, 1),
+                    LocalDate.of(2020, 6, 11),
+                    LocalDate.of(2020, 8, 15),
+                    LocalDate.of(2020, 10, 3),
+                    LocalDate.of(2020, 11, 1),
+                    LocalDate.of(2020, 12, 24),
+                    LocalDate.of(2020, 12, 25),
+                    LocalDate.of(2020, 12, 26),
+                    LocalDate.of(2020, 12, 31)
+            ));
+        }
 
         boolean isPublicHoliday(LocalDate date) {
             return publicHolidays.contains(date);
@@ -205,19 +213,17 @@ class SlideshowCanvas extends Canvas {
         static void render(Graphics2D g, int offset, com.flopcode.slideshow.Font smallFont, LocalDate now, PublicHolidays publicHolidays) {
             LocalDate current = LocalDate.of(now.getYear(), now.getMonth(), 1);
             int i = 1;
-            ColorScheme whiteOrBlack = new ColorScheme(Color.white);
-            ColorScheme redOrBlack = new ColorScheme(Color.red);
-            ColorScheme publicHoliday = new ColorScheme(new Color(0x71A95A));
+            ColorScheme colorScheme = new ColorScheme(Color.white, Color.red, new Color(0x71A95A));
             while (current.getMonthValue() == now.getMonthValue()) {
-                ColorScheme cs = publicHolidays.isPublicHoliday(current) ? publicHoliday :
-                        current.getDayOfWeek() == SUNDAY ? redOrBlack : whiteOrBlack;
+                Color color = publicHolidays.isPublicHoliday(current) ? colorScheme.publicHoliday :
+                        current.getDayOfWeek() == SUNDAY ? colorScheme.sunday : colorScheme.normal;
                 boolean renderingCurrentDay = current.equals(now);
-                centerDay(g, current, offset, i++, smallFont, renderingCurrentDay, cs);
+                centerDay(g, current, offset, i++, smallFont, renderingCurrentDay, color);
                 current = current.plusDays(1);
             }
         }
 
-        static private void centerDay(Graphics2D g, LocalDate date, int offset, int i, com.flopcode.slideshow.Font font, boolean currentDay, ColorScheme cs) {
+        static private void centerDay(Graphics2D g, LocalDate date, int offset, int i, com.flopcode.slideshow.Font font, boolean currentDay, Color color) {
             g.setFont(font.font);
 
             String dayOfMonth = "" + date.getDayOfMonth();
@@ -233,7 +239,7 @@ class SlideshowCanvas extends Canvas {
                 int upperBorder = font.metrics.getMaxAscent();
                 g.fillRect(offset + i * STEP_WIDTH - width / 2 - border, FIRST_LINE_Y - upperBorder, width + 2 * border, 25 + upperBorder + font.metrics.getMaxDescent());
             }
-            g.setColor(cs.normalColor);
+            g.setColor(color);
             g.drawString(dayOfMonth, offset + i * STEP_WIDTH - ((int) bounds.getWidth() / 2), FIRST_LINE_Y);
             g.drawString(dayOfWeek, offset + i * STEP_WIDTH - ((int) dayOfWeekBounds.getWidth() / 2), SECOND_LINE_Y);
         }
