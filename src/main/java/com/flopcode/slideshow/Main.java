@@ -1,6 +1,7 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.Database;
+import com.flopcode.slideshow.weather.Weather;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -23,7 +24,6 @@ import java.awt.Toolkit;
  * database filters new images if it sees a request it completes this request
  */
 public class Main {
-
     public static void main(String[] args) throws Exception {
         System.setProperty("awt.useSystemAAFontSettings", "on");
         System.setProperty("swing.aatext", "true");
@@ -37,6 +37,7 @@ public class Main {
         FileScanner scanner = new FileScanner(db.fileReceiver, args[0]);
         Slideshow slideshow = new Slideshow(db.imageRequest, screenSize);
         MotionDetector motionDetector = new MotionDetector(slideshow.pause, slideshow.resume);
+        Weather weather = new Weather(slideshow.weather);
 
         slideshow.canvas.setPreferredSize(screenSize);
         slideshow.canvas.setSize(screenSize);

@@ -58,3 +58,18 @@ https://nominatim.org/release-docs/develop/api/Reverse/
 *** Colors
 https://www.schemecolor.com/watermelon.php
 https://www.schemecolor.com/avocado.php
+
+*** Weather
+http://api.openweathermap.org/data/2.5/weather?q=Munich,de&appid=d1bff471b620087b73198d7450f2effd&mode=xml&units=metric
+http://api.openweathermap.org/data/2.5/forecast?q=Munich,de&appid=d1bff471b620087b73198d7450f2effd&mode=xml&units=metric
+
+https://openweathermap.org/weather-conditions
+
+https://stackoverflow.com/questions/12487125/java-how-do-you-convert-a-utc-timestamp-to-local-time
+
+should i pick 8 14 17?
+
+**** icons
+https://github.com/manifestinteractive/weather-underground-icons
+
+*sc

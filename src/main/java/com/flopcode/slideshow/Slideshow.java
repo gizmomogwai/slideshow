@@ -1,23 +1,26 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.DatabaseImage;
+import com.flopcode.slideshow.weather.Weather.WeatherInfo;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
 import mindroid.os.Message;
 
 import java.awt.Dimension;
+import java.time.Duration;
 
 public class Slideshow extends HandlerThread {
 
     private final Handler database;
+    private static final Duration NEXT_IMAGE = Duration.ofSeconds(2);
     SlideshowCanvas canvas;
-    Handler pause;
-    Handler resume;
-    private Handler imageAvailable;
-    private Handler nextStep;
+    final Handler weather;
+    final Handler pause;
+    final Handler resume;
+    private final Handler imageAvailable;
     private boolean paused = false;
-
+    private final Handler nextStep;
 
     Slideshow(Handler db, Dimension screenSize) throws Exception {
         this.database = db;
@@ -41,7 +44,7 @@ public class Slideshow extends HandlerThread {
                     System.out.println("Slideshow.handleMessage - cannot handle " + newImage);
                     e.printStackTrace();
                 }
-                nextStep.sendMessageDelayed(new Message(), 2000);
+                nextStep.sendMessageDelayed(new Message(), NEXT_IMAGE.toMillis());
                 msg.recycle();
             }
         };
@@ -81,6 +84,14 @@ public class Slideshow extends HandlerThread {
                 msg.recycle();
             }
 
+        };
+        weather = new Handler(getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                WeatherInfo w = (WeatherInfo) msg.obj;
+                canvas.setWeatherUi(w);
+                msg.recycle();
+            }
         };
     }
 

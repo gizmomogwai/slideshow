@@ -1,6 +1,8 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.DatabaseImage;
+import com.flopcode.slideshow.weather.Weather;
+import com.flopcode.slideshow.weather.WeatherUi;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
@@ -31,21 +33,25 @@ import static java.awt.Image.SCALE_SMOOTH;
 import static java.awt.RenderingHints.KEY_ANTIALIASING;
 import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.image.BufferedImage.TYPE_BYTE_GRAY;
+import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.SUNDAY;
 import static java.time.format.TextStyle.SHORT_STANDALONE;
 
-class SlideshowCanvas extends Canvas {
+public class SlideshowCanvas extends Canvas {
     private final GeoLocationCache geoLocationCache;
     private final PublicHolidays publicHolidays;
     private final Dimension screenSize;
     private final Moon moon;
+    private final WeatherUi weatherUi;
     private Fonts fonts;
     private BufferStrategy buffers;
     private SlideshowImage current;
+    private Weather.WeatherInfo weatherInfo;
 
     SlideshowCanvas(Dimension screenSize, GeoLocationCache geoLocationCache) throws Exception {
         this.geoLocationCache = geoLocationCache;
         moon = new Moon();
+        weatherUi = new WeatherUi();
         setIgnoreRepaint(true);
         fonts = new Fonts(this, createFont(TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf"))));
         this.screenSize = screenSize;
@@ -83,6 +89,7 @@ class SlideshowCanvas extends Canvas {
 
                 renderCalendar(g, screenSize, fonts);
                 renderMoon(g);
+                renderWeather(g, weatherUi, weatherInfo, 100);
             });
         }
 
@@ -95,8 +102,19 @@ class SlideshowCanvas extends Canvas {
 
             renderCalendar(g, screenSize, fonts);
             renderMoon(g);
+            renderWeather(g, weatherUi, weatherInfo, 100);
         });
     }
+
+    private void renderWeather(Graphics2D g, WeatherUi ui, Weather.WeatherInfo weatherInfo, int y) {
+        try {
+            ui.render(g, screenSize, fonts, weatherInfo, y);
+        } catch (Exception e) {
+            System.out.println("SlideshowCanvas.renderWeather - " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
     private void renderMoon(Graphics2D g) {
         moon.getPhase().render(g, screenSize.width - 80, 30);
@@ -135,13 +153,19 @@ class SlideshowCanvas extends Canvas {
         return image.getScaledInstance(-1, size.height, SCALE_SMOOTH);
     }
 
-    static class Fonts {
+    void setWeatherUi(Weather.WeatherInfo w) {
+        this.weatherInfo = w;
+    }
+
+    public static class Fonts {
         private final com.flopcode.slideshow.Font subtitles;
-        private final com.flopcode.slideshow.Font calendar;
+        public final com.flopcode.slideshow.Font calendar;
+        public final com.flopcode.slideshow.Font smallCalendar;
 
         Fonts(Component c, Font baseFont) {
             this.subtitles = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(48f));
             this.calendar = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(20f));
+            this.smallCalendar = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(12f));
         }
     }
 
@@ -216,7 +240,7 @@ class SlideshowCanvas extends Canvas {
             ColorScheme colorScheme = new ColorScheme(Color.white, Color.red, new Color(0x71A95A));
             while (current.getMonthValue() == now.getMonthValue()) {
                 Color color = publicHolidays.isPublicHoliday(current) ? colorScheme.publicHoliday :
-                        current.getDayOfWeek() == SUNDAY ? colorScheme.sunday : colorScheme.normal;
+                        (current.getDayOfWeek() == SUNDAY || current.getDayOfWeek() == SATURDAY) ? colorScheme.sunday : colorScheme.normal;
                 boolean renderingCurrentDay = current.equals(now);
                 centerDay(g, current, offset, i++, smallFont, renderingCurrentDay, color);
                 current = current.plusDays(1);

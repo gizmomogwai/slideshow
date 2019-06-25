@@ -116,7 +116,6 @@ class SlideshowImage {
         Writer out = new StringWriter();
         tf.transform(new DOMSource(document), new StreamResult(out));
         System.out.println(out.toString());
-
     }
 
     private String pluralize(String base, int count) {
