@@ -5,15 +5,19 @@ import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
 import mindroid.os.Message;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class Database extends HandlerThread {
 
     public Handler fileReceiver;
     public Handler imageRequest;
+    private Handler requestor = null;
+
     private List<DatabaseImage> allImages = new ArrayList<>();
-    private Handler requester = null;
+    private FilteredList filteredImages = new FilteredList();
 
 
     public Database() throws Exception {
@@ -37,10 +41,11 @@ public class Database extends HandlerThread {
             @Override
             public void handleMessage(Message msg) {
                 try {
-                    requester = (Handler) msg.getData().getObject("requestor");
-                    if (requester == null) {
+                    requestor = (Handler) msg.getData().getObject("requestor");
+                    if (requestor == null) {
                         throw new IllegalArgumentException("expected requestor in bundle");
                     }
+                    filteredImages.update(allImages);
                     sendBackToRequestor();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -52,25 +57,63 @@ public class Database extends HandlerThread {
 
     private void addImage(DatabaseImage databaseImage) {
         allImages.add(databaseImage);
-        sendBackToRequestor();
+        if (filteredImages.add(databaseImage)) {
+            sendBackToRequestor();
+        }
     }
 
     private void sendBackToRequestor() {
-        if (requester != null) {
+        if (requestor != null) {
             DatabaseImage nextImage = next();
             if (nextImage != null) {
-                requester.sendMessage(new Message().setData(new Bundle().putObject("image", nextImage)));
-                requester = null;
+                requestor.sendMessage(new Message().setData(new Bundle().putObject("image", nextImage)));
+                requestor = null;
             }
         }
     }
 
     public DatabaseImage next() {
-        int index = (int) Math.floor(Math.random() * allImages.size());
-        if (index >= allImages.size()) {
-            return null;
+        return filteredImages.next();
+    }
+
+    static class FilteredList {
+        private final LocalDate now;
+        private List<DatabaseImage> images = new ArrayList<>();
+        private Predicate<DatabaseImage> filter;
+
+        public FilteredList() {
+            now = LocalDate.now();
+            updatePredicate();
         }
 
-        return allImages.get(index);
+        private void updatePredicate() {
+            filter = (image) -> image.creationData.getMonth() == LocalDate.now().getMonth();
+        }
+
+        public boolean add(DatabaseImage image) {
+            if (filter.test(image)) {
+                images.add(image);
+                return true;
+            }
+            return false;
+        }
+
+        public void update(List<DatabaseImage> allImages) {
+            if (!LocalDate.now().isEqual(now)) {
+                updatePredicate();
+                images = new ArrayList<>();
+                for (DatabaseImage i : allImages) {
+                    add(i);
+                }
+            }
+        }
+
+        public DatabaseImage next() {
+            int index = (int) Math.floor(Math.random() * images.size());
+            if (index >= images.size()) {
+                return null;
+            }
+            return images.get(index);
+        }
     }
 }
