@@ -12,15 +12,15 @@ import java.time.Duration;
 
 public class Slideshow extends HandlerThread {
 
-    private final Handler database;
-    private static final Duration NEXT_IMAGE = Duration.ofSeconds(2);
-    SlideshowCanvas canvas;
+    private static final Duration NEXT_IMAGE = Duration.ofSeconds(20);
     final Handler weather;
     final Handler pause;
     final Handler resume;
+    private final Handler database;
     private final Handler imageAvailable;
-    private boolean paused = false;
     private final Handler nextStep;
+    SlideshowCanvas canvas;
+    private boolean paused = false;
 
     Slideshow(Handler db, Dimension screenSize) throws Exception {
         this.database = db;

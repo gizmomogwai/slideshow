@@ -89,6 +89,7 @@ public class Weather extends Thread {
 
     private Document getDocument(String s) throws IOException, ParserConfigurationException, SAXException {
         URL url = new URL(s);
+        System.out.println("Weather.getDocument - " + url);
         URLConnection connection = url.openConnection();
         connection.setRequestProperty("User-Agent", "slideshow");
         connection.connect();
@@ -147,17 +148,24 @@ public class Weather extends Thread {
     }
 
     static class Sun {
-        private final XPathExpression riseQuery;
-        private final XPathExpression setQuery;
+        private static final XPathExpression riseQuery;
+        private static final XPathExpression setQuery;
+
+        static {
+            XPathFactory xPathfactory = XPathFactory.newInstance();
+            XPath xpath = xPathfactory.newXPath();
+            try {
+                riseQuery = xpath.compile("current/city/sun/@rise");
+                setQuery = xpath.compile("current/city/sun/@set");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         ZonedDateTime rise;
         ZonedDateTime set;
 
         public Sun(Document d) throws Exception {
-            XPathFactory xPathfactory = XPathFactory.newInstance();
-            XPath xpath = xPathfactory.newXPath();
-            riseQuery = xpath.compile("current/city/sun/@rise");
-            setQuery = xpath.compile("current/city/sun/@set");
-
             rise = parseDateTime(riseQuery.evaluate(d));
             set = parseDateTime(setQuery.evaluate(d));
         }
@@ -165,12 +173,26 @@ public class Weather extends Thread {
     }
 
     public static class Condition {
-        public final String current;
+        private static final XPathExpression currentXPath;
+        private static final XPathExpression windXPath;
 
-        public Condition(Document d) throws Exception {
+        static {
             XPathFactory xPathfactory = XPathFactory.newInstance();
             XPath xpath = xPathfactory.newXPath();
-            current = xpath.compile("current/weather/@value").evaluate(d);
+            try {
+                currentXPath = xpath.compile("current/weather/@value");
+                windXPath = xpath.compile("current/wind/speed/@name");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public final String current;
+        public final String wind;
+
+        public Condition(Document d) throws Exception {
+            this.current = currentXPath.evaluate(d);
+            this.wind = windXPath.evaluate(d);
         }
     }
 

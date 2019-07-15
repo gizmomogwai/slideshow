@@ -40,14 +40,14 @@ public class WeatherUi {
         drawImage(g, icons.get(weatherInfo.condition.current), screenSize, -50, y + 80);
         drawString(g, "" + weatherInfo.temperature.current, screenSize, -8, y + 125);
         g.setFont(fonts.smallCalendar.font);
-        g.setFont(fonts.smallCalendar.font);
         drawString(g, "" + weatherInfo.temperature.min, screenSize, -31, y + 140);
         drawString(g, "" + weatherInfo.temperature.max, screenSize, -8, y + 140);
         drawString(g, weatherInfo.condition.current, screenSize, -8, y + 160);
+        drawString(g, weatherInfo.condition.wind, screenSize, -8, y + 180);
 
-        renderForecastDay(g, screenSize, weatherExtract.today, y + 180);
-        renderForecastDay(g, screenSize, weatherExtract.tomorrow, y + 220);
-        renderForecastDay(g, screenSize, weatherExtract.dayAfterTomorrow, y + 260);
+        renderForecastDay(g, screenSize, weatherExtract.today, y + 200);
+        renderForecastDay(g, screenSize, weatherExtract.tomorrow, y + 240);
+        renderForecastDay(g, screenSize, weatherExtract.dayAfterTomorrow, y + 280);
     }
 
 

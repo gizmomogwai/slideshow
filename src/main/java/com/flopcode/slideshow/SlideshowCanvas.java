@@ -158,9 +158,9 @@ public class SlideshowCanvas extends Canvas {
     }
 
     public static class Fonts {
-        private final com.flopcode.slideshow.Font subtitles;
         public final com.flopcode.slideshow.Font calendar;
         public final com.flopcode.slideshow.Font smallCalendar;
+        private final com.flopcode.slideshow.Font subtitles;
 
         Fonts(Component c, Font baseFont) {
             this.subtitles = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(48f));
