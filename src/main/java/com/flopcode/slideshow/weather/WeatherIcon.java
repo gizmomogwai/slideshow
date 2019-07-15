@@ -9,7 +9,7 @@ import static java.awt.Image.SCALE_AREA_AVERAGING;
 
 class WeatherIcon {
 
-    HashMap<String, String> condition2Icon = new HashMap<String, String>() {
+    private HashMap<String, String> condition2Icon = new HashMap<String, String>() {
         {
             put("few clouds", "sun-and-clouds");
             put("overcast clouds", "sun-and-clouds");
@@ -22,10 +22,9 @@ class WeatherIcon {
             put("heavy intensity rain", "stormrain-thunders");
             put("clear sky", "sun");
             put("mist", "moon-and-clouds");
-            put("eclipse", "eclipse");
         }
     };
-    HashMap<String, Image> imageCache = new HashMap<>();
+    private HashMap<String, Image> imageCache = new HashMap<>();
 
     public Image get(String current) throws Exception {
         return get(current, 100);
@@ -40,7 +39,6 @@ class WeatherIcon {
         if (!condition2Icon.containsKey(current)) {
             current = "eclipse";
             System.out.println("WeatherIcon.get - cannot find " + current);
-            throw new Exception("no icon for '" + current + "'");
         }
 
         String file = condition2Icon.get(current);
