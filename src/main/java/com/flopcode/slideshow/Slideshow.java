@@ -61,7 +61,6 @@ public class Slideshow extends HandlerThread {
             }
         };
         pause = new Handler(getLooper()) {
-
             @Override
             public void handleMessage(Message msg) {
                 try {

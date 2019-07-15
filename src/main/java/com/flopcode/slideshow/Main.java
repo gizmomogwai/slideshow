@@ -34,7 +34,7 @@ public class Main {
         // screenSize.height /= 2;
 
         Database db = new Database();
-        FileScanner scanner = new FileScanner(db.fileReceiver, args[0]);
+        FileScanner scanner = new FileScanner(db.fileReceiver, args);
         Slideshow slideshow = new Slideshow(db.imageRequest, screenSize);
         MotionDetector motionDetector = new MotionDetector(slideshow.pause, slideshow.resume);
         Weather weather = new Weather(slideshow.weather);
