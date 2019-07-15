@@ -129,4 +129,8 @@ task :copy_images_to_slideshow do
   sh "rm #{home}/tmp/photos.db"
 end
 
+desc 'show and get server logs'
+task :show_and_get_server_logs do
+  sh "ssh pi@slideshow.local journalctl --user-unit=slideshow | tee logs.txt"
+end
 task :default => [:deploy]
