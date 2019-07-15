@@ -16,11 +16,13 @@ class WeatherIcon {
             put("scattered clouds", "sun-and-clouds");
             put("broken clouds", "sun-and-clouds");
             put("light rain", "rain-clouds");
+            put("shower rain", "rain-clouds");
             put("eclipse", "eclipse");
             put("moderate rain", "rain-clouds");
             put("heavy intensity rain", "stormrain-thunders");
             put("clear sky", "sun");
             put("mist", "moon-and-clouds");
+            put("eclipse", "eclipse");
         }
     };
     HashMap<String, Image> imageCache = new HashMap<>();
@@ -36,6 +38,8 @@ class WeatherIcon {
             return imageCache.get(key);
         }
         if (!condition2Icon.containsKey(current)) {
+            current = "eclipse";
+            System.out.println("WeatherIcon.get - cannot find " + current);
             throw new Exception("no icon for '" + current + "'");
         }
 
