@@ -10,13 +10,17 @@ import java.awt.BasicStroke;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -42,6 +46,8 @@ public class SlideshowCanvas extends Canvas {
     private final PublicHolidays publicHolidays;
     private final Dimension screenSize;
     private final Moon moon;
+    private final MoonUI moonUi;
+    private final CalendarUI calendarUi;
     private final WeatherUi weatherUi;
     private Fonts fonts;
     private BufferStrategy buffers;
@@ -51,24 +57,89 @@ public class SlideshowCanvas extends Canvas {
     SlideshowCanvas(Dimension screenSize, GeoLocationCache geoLocationCache) throws Exception {
         this.geoLocationCache = geoLocationCache;
         moon = new Moon();
+        moonUi = new MoonUI(moon);
         weatherUi = new WeatherUi();
-        setIgnoreRepaint(true);
+        publicHolidays = new PublicHolidays();
         fonts = new Fonts(this, createFont(TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf"))));
+
+        calendarUi = new CalendarUI(screenSize, fonts, publicHolidays);
+        setIgnoreRepaint(true);
         this.screenSize = screenSize;
         current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, TYPE_BYTE_GRAY), fonts.subtitles, geoLocationCache);
-        publicHolidays = new PublicHolidays();
     }
 
-    private <T> void renderDoubleBuffered(Dimension screenSize, T context, BiConsumer<Graphics2D, T> renderer) {
+    public static class Gfx {
+        final Graphics2D graphics;
+
+        Gfx(Graphics2D graphics, int x, int y, int width, int height) {
+            this.graphics = graphics;
+            this.graphics.setClip(x, y, width, height);
+        }
+
+        public void setColor(Color color) {
+            graphics.setColor(color);
+        }
+
+        public void fillRect(int x, int y, int width, int height) {
+            graphics.fillRect(x, y, width, height);
+        }
+
+        public void dispose() {
+            graphics.dispose();
+        }
+
+        public void setRenderingHint(RenderingHints.Key key, Object value) {
+            graphics.setRenderingHint(key, value);
+        }
+
+        public void setComposite(Composite composite) {
+            graphics.setComposite(composite);
+        }
+
+        public void render(int x, int y, UI ui) {
+            AffineTransform store = graphics.getTransform();
+            graphics.translate(x, y);
+            ui.render(graphics);
+            graphics.setTransform(store);
+        }
+
+        public int fromRight(int x) {
+            return graphics.getClipBounds().width - x;
+        }
+
+        public int fromTop(int y) {
+            return y;
+        }
+
+        public void setFont(Font font) {
+            graphics.setFont(font);
+        }
+
+        public void drawImage(Image i, int x, int y) {
+            graphics.drawImage(i, x, y, null);
+        }
+
+        public Rectangle2D getStringBounds(String s) {
+            return graphics.getFontMetrics().getStringBounds(s, graphics);
+        }
+
+        public void drawString(String s, int x, int y) {
+            graphics.drawString(s, x, y);
+        }
+    }
+
+    private <T> void renderDoubleBuffered(Dimension screenSize, T context, BiConsumer<Gfx, T> renderer) {
         if (buffers == null) {
             createBufferStrategy(2);
             buffers = getBufferStrategy();
         }
         Graphics2D g = (Graphics2D) buffers.getDrawGraphics();
-        g.setColor(BLACK);
-        g.fillRect(0, 0, screenSize.width, screenSize.height);
-        renderer.accept(g, context);
-        g.dispose();
+        Gfx gfx = new Gfx(g, 0, 0, screenSize.width, screenSize.height);
+
+        gfx.setColor(BLACK);
+        gfx.fillRect(0, 0, screenSize.width, screenSize.height);
+        renderer.accept(gfx, context);
+        gfx.dispose();
         buffers.show();
     }
 
@@ -87,8 +158,10 @@ public class SlideshowCanvas extends Canvas {
                 g.setComposite(AlphaComposite.getInstance(SRC_OVER, alpha));
                 nextImage.render(g, screenSize);
 
-                renderCalendar(g, screenSize, fonts);
-                renderMoon(g);
+
+                g.render(0, 0, calendarUi);
+
+                g.render(g.fromRight(80), g.fromTop(30), moonUi);
                 renderWeather(g, weatherUi, weatherInfo, 100);
             });
         }
@@ -99,14 +172,26 @@ public class SlideshowCanvas extends Canvas {
         renderDoubleBuffered(screenSize, null, (g, nothing) -> {
             g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
             current.render(g, screenSize);
-
-            renderCalendar(g, screenSize, fonts);
-            renderMoon(g);
+            g.render(0, 0, calendarUi);
+            g.render(fromLeft(screenSize, 80), fromTop(30), moonUi);
             renderWeather(g, weatherUi, weatherInfo, 100);
         });
     }
 
-    private void renderWeather(Graphics2D g, WeatherUi ui, Weather.WeatherInfo weatherInfo, int y) {
+    private int fromTop(int y) {
+        return y;
+    }
+
+    private int fromLeft(Dimension screenSize, int offset) {
+        return screenSize.width - offset;
+    }
+
+
+    interface UI {
+        void render(Graphics2D g);
+    }
+
+    private void renderWeather(Gfx g, WeatherUi ui, Weather.WeatherInfo weatherInfo, int y) {
         try {
             ui.render(g, screenSize, fonts, weatherInfo, y);
         } catch (Exception e) {
@@ -115,19 +200,41 @@ public class SlideshowCanvas extends Canvas {
         }
     }
 
+    static class CalendarUI implements UI {
 
-    private void renderMoon(Graphics2D g) {
-        moon.getPhase().render(g, screenSize.width - 80, 30);
+        final Dimension screenSize;
+        final Fonts fonts;
+        private final PublicHolidays publicHolidays;
+
+        CalendarUI(Dimension screenSize, Fonts fonts, PublicHolidays publicHolidays) {
+            this.screenSize = screenSize;
+            this.fonts = fonts;
+            this.publicHolidays = publicHolidays;
+        }
+
+        @Override
+        public void render(Graphics2D g) {
+            Locale locale = Locale.ENGLISH;
+            LocalDate now = LocalDate.now();
+
+            CalendarBackground.render(g, screenSize);
+            CalendarDate.render(g, fonts.subtitles, now, locale);
+            CalendarLine.render(g, 230, fonts.calendar, now, publicHolidays);
+        }
     }
 
-    private void renderCalendar(Graphics2D g, Dimension screenSize, Fonts fonts) {
-        Locale locale = Locale.ENGLISH;
-        LocalDate now = LocalDate.now();
+    static class MoonUI implements UI {
+        final Moon moon;
 
-        CalendarBackground.render(g, screenSize);
-        CalendarDate.render(g, fonts.subtitles, now, locale);
-        CalendarLine.render(g, 230, fonts.calendar, now, publicHolidays);
+        MoonUI(Moon moon) {
+            this.moon = moon;
+        }
+
+        public void render(Graphics2D g) {
+            moon.getPhase().render(g, 0, 0);
+        }
     }
+
 
     private Image loadImage(File file, Dimension screenSize) throws Exception {
         try {

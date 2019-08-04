@@ -16,7 +16,6 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.Image;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -164,7 +163,7 @@ class SlideshowImage {
         image.flush();
     }
 
-    void render(Graphics2D graphics, Dimension screenSize) {
+    void render(SlideshowCanvas.Gfx graphics, Dimension screenSize) {
         center(graphics, screenSize, image);
 
         graphics.setColor(new Color(0, 0, 0, 0.7f));
@@ -173,11 +172,11 @@ class SlideshowImage {
         //text(graphics, locationText, screenSize, screenSize.height - metrics.getAscent() * 2 - 5);
     }
 
-    private void center(Graphics2D graphics, Dimension screenSize, Image image) {
-        graphics.drawImage(image, (screenSize.width - image.getWidth(null)) / 2, (screenSize.height - image.getHeight(null)) / 2, null);
+    private void center(SlideshowCanvas.Gfx graphics, Dimension screenSize, Image image) {
+        graphics.drawImage(image, (screenSize.width - image.getWidth(null)) / 2, (screenSize.height - image.getHeight(null)) / 2);
     }
 
-    private void text(Graphics2D graphics, String text, int y) {
+    private void text(SlideshowCanvas.Gfx graphics, String text, int y) {
         graphics.setFont(font.font);
         int x = font.metrics.getMaxDescent() + 5;
 /*

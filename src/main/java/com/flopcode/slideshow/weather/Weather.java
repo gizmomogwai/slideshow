@@ -43,6 +43,8 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Double.parseDouble;
+import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 
 public class Weather extends Thread {
@@ -181,7 +183,7 @@ public class Weather extends Thread {
             XPath xpath = xPathfactory.newXPath();
             try {
                 currentXPath = xpath.compile("current/weather/@value");
-                windXPath = xpath.compile("current/wind/speed/@name");
+                windXPath = xpath.compile("current/wind/speed/@value");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -192,7 +194,7 @@ public class Weather extends Thread {
 
         public Condition(Document d) throws Exception {
             this.current = currentXPath.evaluate(d);
-            this.wind = windXPath.evaluate(d);
+            this.wind = format("%.1f", parseDouble(windXPath.evaluate(d)) * 3.6) + " km/h";
         }
     }
 

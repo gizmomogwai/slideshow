@@ -3,7 +3,6 @@ package com.flopcode.slideshow.weather;
 import com.flopcode.slideshow.SlideshowCanvas;
 
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.geom.Rectangle2D;
 import java.time.LocalDate;
@@ -17,64 +16,64 @@ import static java.awt.Color.WHITE;
 public class WeatherUi {
     private static final DateTimeFormatter SUN_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    private final Image sunny;
+    private final Image sunriseSunsetImage;
     private final WeatherIcon icons;
     private WeatherExtract weatherExtract;
 
     public WeatherUi() throws Exception {
         icons = new WeatherIcon();
-        sunny = icons.get("eclipse");
+        sunriseSunsetImage = icons.get("eclipse");
         weatherExtract = new WeatherExtract(null);
     }
 
-    public void render(Graphics2D g, Dimension screenSize, SlideshowCanvas.Fonts fonts, Weather.WeatherInfo weatherInfo, int y) throws Exception {
+    public void render(SlideshowCanvas.Gfx g, Dimension screenSize, SlideshowCanvas.Fonts fonts, Weather.WeatherInfo weatherInfo, int y) throws Exception {
         weatherExtract = weatherExtract.update(weatherInfo);
 
-        drawImage(g, sunny, screenSize, -50, y);
+        g.drawImage(sunriseSunsetImage, g.fromRight(70 + sunriseSunsetImage.getWidth(null)), y);
         g.setFont(fonts.calendar.font);
         g.setColor(WHITE);
         drawString(g, SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.rise), screenSize, -8, y + 45);
         drawString(g, SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.set), screenSize, -8, y + 65);
 
 
-        drawImage(g, icons.get(weatherInfo.condition.current), screenSize, -50, y + 80);
+        Image now = icons.get(weatherInfo.condition.current);
+        g.drawImage(now, g.fromRight(70 + now.getWidth(null)), y + 80);
         drawString(g, "" + weatherInfo.temperature.current, screenSize, -8, y + 125);
-        g.setFont(fonts.smallCalendar.font);
-        drawString(g, "" + weatherInfo.temperature.min, screenSize, -31, y + 140);
+        drawString(g, "" + weatherInfo.temperature.min, screenSize, -45, y + 140);
         drawString(g, "" + weatherInfo.temperature.max, screenSize, -8, y + 140);
         drawString(g, weatherInfo.condition.current, screenSize, -8, y + 160);
         drawString(g, weatherInfo.condition.wind, screenSize, -8, y + 180);
 
         renderForecastDay(g, screenSize, weatherExtract.today, y + 200);
-        renderForecastDay(g, screenSize, weatherExtract.tomorrow, y + 240);
-        renderForecastDay(g, screenSize, weatherExtract.dayAfterTomorrow, y + 280);
+        renderForecastDay(g, screenSize, weatherExtract.tomorrow, y + 250);
+        renderForecastDay(g, screenSize, weatherExtract.dayAfterTomorrow, y + 300);
     }
 
 
-    private void renderForecastDay(Graphics2D g, Dimension screenSize, Forecast_8_12_16 forecast, int y) throws Exception {
+    private void renderForecastDay(SlideshowCanvas.Gfx g, Dimension screenSize, Forecast_8_12_16 forecast, int y) throws Exception {
         drawImage(g, icons.get(forecast._8.symbol, 50), screenSize, -100, y);
-        centerString(g, "" + forecast._8.temperature, screenSize, -125, y + 45);
+        centerString(g, "" + forecast._8.temperature, screenSize, -125, y + 50);
         drawImage(g, icons.get(forecast._12.symbol, 50), screenSize, -50, y);
-        centerString(g, "" + forecast._12.temperature, screenSize, -75, y + 45);
+        centerString(g, "" + forecast._12.temperature, screenSize, -75, y + 50);
         drawImage(g, icons.get(forecast._16.symbol, 50), screenSize, -1, y);
-        centerString(g, "" + forecast._16.temperature, screenSize, -26, y + 45);
+        centerString(g, "" + forecast._16.temperature, screenSize, -26, y + 50);
     }
 
-    private void centerString(Graphics2D g, String s, Dimension screenSize, int x, int y) {
-        Rectangle2D size = g.getFontMetrics().getStringBounds(s, g);
+    private void centerString(SlideshowCanvas.Gfx g, String s, Dimension screenSize, int x, int y) {
+        Rectangle2D size = g.getStringBounds(s);
         x = (x < 0) ? screenSize.width + x : x;
         g.drawString(s, (int) (x - size.getWidth() / 2), y);
     }
 
-    private void drawImage(Graphics2D g, Image i, Dimension screenSize, int x, int y) {
+    private void drawImage(SlideshowCanvas.Gfx g, Image i, Dimension screenSize, int x, int y) {
         if (x < 0) {
-            g.drawImage(i, screenSize.width - i.getWidth(null) + x, y, null);
+            g.drawImage(i, screenSize.width - i.getWidth(null) + x, y);
         } else {
-            g.drawImage(i, x, y, null);
+            g.drawImage(i, x, y);
         }
     }
 
-    private void drawString(Graphics2D g, String s, Dimension screenSize, int x, int y) {
+    private void drawString(SlideshowCanvas.Gfx g, String s, Dimension screenSize, int x, int y) {
         if (x >= 0 && y >= 0) {
             g.drawString(s, x, y);
         }
@@ -82,7 +81,7 @@ public class WeatherUi {
             throw new RuntimeException("nyo");
         }
         if (x < 0) {
-            Rectangle2D bounds = g.getFontMetrics().getStringBounds(s, g);
+            Rectangle2D bounds = g.getStringBounds(s);
             g.drawString(s, (int) (screenSize.width - bounds.getWidth() + x), y);
         }
     }
