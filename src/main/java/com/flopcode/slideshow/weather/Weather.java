@@ -111,10 +111,10 @@ public class Weather extends Thread {
     }
 
     public static class WeatherInfo {
-        public final Temperature temperature;
-        public final Forecasts forecasts;
-        public final Sun sun;
-        public final Condition condition;
+        final Temperature temperature;
+        final Forecasts forecasts;
+        final Sun sun;
+        final Condition condition;
 
         WeatherInfo(Document current, Document forecast) throws Exception {
             this.sun = new Sun(current);
@@ -122,8 +122,6 @@ public class Weather extends Thread {
             this.forecasts = new Forecasts(forecast);
             this.condition = new Condition(current);
         }
-
-
     }
 
     static class Temperature {
@@ -138,11 +136,11 @@ public class Weather extends Thread {
         final int min;
         final int max;
 
-        public Temperature(Document d) throws Exception {
+        Temperature(Document d) throws Exception {
             this(Math.round(Float.parseFloat(xpath.compile("current/temperature/@value").evaluate(d))), Math.round(Float.parseFloat(xpath.compile("current/temperature/@min").evaluate(d))), Math.round(Float.parseFloat(xpath.compile("current/temperature/@max").evaluate(d))));
         }
 
-        public Temperature(int current, int min, int max) {
+        Temperature(int current, int min, int max) {
             this.current = current;
             this.min = min;
             this.max = max;
@@ -167,7 +165,7 @@ public class Weather extends Thread {
         ZonedDateTime rise;
         ZonedDateTime set;
 
-        public Sun(Document d) throws Exception {
+        Sun(Document d) throws Exception {
             rise = parseDateTime(riseQuery.evaluate(d));
             set = parseDateTime(setQuery.evaluate(d));
         }
@@ -190,16 +188,16 @@ public class Weather extends Thread {
         }
 
         public final String current;
-        public final String wind;
+        final String wind;
 
-        public Condition(Document d) throws Exception {
+        Condition(Document d) throws Exception {
             this.current = currentXPath.evaluate(d);
             this.wind = format("%.1f", parseDouble(windXPath.evaluate(d)) * 3.6) + " km/h";
         }
     }
 
     public static class Forecast {
-        public final String symbol;
+        final String symbol;
         final ZonedDateTime time;
         final int temperature;
 
@@ -211,11 +209,9 @@ public class Weather extends Thread {
     }
 
     static class Forecasts {
+        final List<Forecast> forecasts;
 
-
-        public final List<Forecast> forecasts;
-
-        public Forecasts(Document d) throws Exception {
+        Forecasts(Document d) throws Exception {
             XPathFactory xPathfactory = XPathFactory.newInstance();
             XPath xpath = xPathfactory.newXPath();
             NodeList forecastNodes = (NodeList) xpath.compile("weatherdata/forecast/time").evaluate(d, XPathConstants.NODESET);

@@ -163,7 +163,7 @@ class SlideshowImage {
         image.flush();
     }
 
-    void render(SlideshowCanvas.Gfx graphics, Dimension screenSize) {
+    void render(Gfx graphics, Dimension screenSize) {
         center(graphics, screenSize, image);
 
         graphics.setColor(new Color(0, 0, 0, 0.7f));
@@ -172,11 +172,11 @@ class SlideshowImage {
         //text(graphics, locationText, screenSize, screenSize.height - metrics.getAscent() * 2 - 5);
     }
 
-    private void center(SlideshowCanvas.Gfx graphics, Dimension screenSize, Image image) {
+    private void center(Gfx graphics, Dimension screenSize, Image image) {
         graphics.drawImage(image, (screenSize.width - image.getWidth(null)) / 2, (screenSize.height - image.getHeight(null)) / 2);
     }
 
-    private void text(SlideshowCanvas.Gfx graphics, String text, int y) {
+    private void text(Gfx graphics, String text, int y) {
         graphics.setFont(font.font);
         int x = font.metrics.getMaxDescent() + 5;
 /*

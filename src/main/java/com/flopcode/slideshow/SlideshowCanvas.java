@@ -10,17 +10,13 @@ import java.awt.BasicStroke;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.RenderingHints;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -66,66 +62,6 @@ public class SlideshowCanvas extends Canvas {
         setIgnoreRepaint(true);
         this.screenSize = screenSize;
         current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, TYPE_BYTE_GRAY), fonts.subtitles, geoLocationCache);
-    }
-
-    public static class Gfx {
-        final Graphics2D graphics;
-
-        Gfx(Graphics2D graphics, int x, int y, int width, int height) {
-            this.graphics = graphics;
-            this.graphics.setClip(x, y, width, height);
-        }
-
-        public void setColor(Color color) {
-            graphics.setColor(color);
-        }
-
-        public void fillRect(int x, int y, int width, int height) {
-            graphics.fillRect(x, y, width, height);
-        }
-
-        public void dispose() {
-            graphics.dispose();
-        }
-
-        public void setRenderingHint(RenderingHints.Key key, Object value) {
-            graphics.setRenderingHint(key, value);
-        }
-
-        public void setComposite(Composite composite) {
-            graphics.setComposite(composite);
-        }
-
-        public void render(int x, int y, UI ui) {
-            AffineTransform store = graphics.getTransform();
-            graphics.translate(x, y);
-            ui.render(graphics);
-            graphics.setTransform(store);
-        }
-
-        public int fromRight(int x) {
-            return graphics.getClipBounds().width - x;
-        }
-
-        public int fromTop(int y) {
-            return y;
-        }
-
-        public void setFont(Font font) {
-            graphics.setFont(font);
-        }
-
-        public void drawImage(Image i, int x, int y) {
-            graphics.drawImage(i, x, y, null);
-        }
-
-        public Rectangle2D getStringBounds(String s) {
-            return graphics.getFontMetrics().getStringBounds(s, graphics);
-        }
-
-        public void drawString(String s, int x, int y) {
-            graphics.drawString(s, x, y);
-        }
     }
 
     private <T> void renderDoubleBuffered(Dimension screenSize, T context, BiConsumer<Gfx, T> renderer) {
@@ -187,13 +123,9 @@ public class SlideshowCanvas extends Canvas {
     }
 
 
-    interface UI {
-        void render(Graphics2D g);
-    }
-
-    private void renderWeather(Gfx g, WeatherUi ui, Weather.WeatherInfo weatherInfo, int y) {
+    private void renderWeather(Gfx gfx, WeatherUi ui, Weather.WeatherInfo weatherInfo, int y) {
         try {
-            ui.render(g, screenSize, fonts, weatherInfo, y);
+            ui.render(gfx, fonts, weatherInfo, y);
         } catch (Exception e) {
             System.out.println("SlideshowCanvas.renderWeather - " + e.getMessage());
             e.printStackTrace();
@@ -213,7 +145,7 @@ public class SlideshowCanvas extends Canvas {
         }
 
         @Override
-        public void render(Graphics2D g) {
+        public void render(Gfx gfx, Graphics2D g) {
             Locale locale = Locale.ENGLISH;
             LocalDate now = LocalDate.now();
 
@@ -230,7 +162,7 @@ public class SlideshowCanvas extends Canvas {
             this.moon = moon;
         }
 
-        public void render(Graphics2D g) {
+        public void render(Gfx gfx, Graphics2D g) {
             moon.getPhase().render(g, 0, 0);
         }
     }

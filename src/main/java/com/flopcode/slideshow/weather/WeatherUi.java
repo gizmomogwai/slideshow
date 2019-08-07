@@ -1,14 +1,16 @@
 package com.flopcode.slideshow.weather;
 
+import com.flopcode.slideshow.Gfx;
 import com.flopcode.slideshow.SlideshowCanvas;
+import com.flopcode.slideshow.UI;
 
-import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.geom.Rectangle2D;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.awt.Color.WHITE;
@@ -16,73 +18,112 @@ import static java.awt.Color.WHITE;
 public class WeatherUi {
     private static final DateTimeFormatter SUN_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    private final Image sunriseSunsetImage;
-    private final WeatherIcon icons;
+    private final Forecast today;
+    private final Forecast tomorrow;
+    private final Forecast dayAfterTomorrow;
+    private final SunriseSunset sunriseSunset;
+    private final CurrentCondition currentCondition;
     private WeatherExtract weatherExtract;
 
     public WeatherUi() throws Exception {
-        icons = new WeatherIcon();
-        sunriseSunsetImage = icons.get("eclipse");
+        WeatherIcon icons = new WeatherIcon();
         weatherExtract = new WeatherExtract(null);
+        today = new Forecast(icons, () -> weatherExtract.today);
+        tomorrow = new Forecast(icons, () -> weatherExtract.tomorrow);
+        dayAfterTomorrow = new Forecast(icons, () -> weatherExtract.dayAfterTomorrow);
+        sunriseSunset = new SunriseSunset(icons);
+        currentCondition = new CurrentCondition(icons);
     }
 
-    public void render(SlideshowCanvas.Gfx g, Dimension screenSize, SlideshowCanvas.Fonts fonts, Weather.WeatherInfo weatherInfo, int y) throws Exception {
+    static class CurrentCondition implements UI {
+
+        private final WeatherIcon icons;
+        private Weather.WeatherInfo weatherInfo;
+
+        CurrentCondition(WeatherIcon icons) {
+            this.icons = icons;
+        }
+
+        @Override
+        public void render(Gfx gfx, Graphics2D g) throws Exception {
+            Image now = icons.get(weatherInfo.condition.current);
+            gfx.drawImage(now, gfx.fromRight(70 + now.getWidth(null)), 0);
+
+            String s = "" + weatherInfo.temperature.current;
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
+            s = "" + weatherInfo.temperature.min;
+            gfx.drawString(s, gfx.fromRight(45 + gfx.getStringBounds(s).getWidth()), 60);
+            s = "" + weatherInfo.temperature.max;
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 60);
+            s = weatherInfo.condition.current;
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 80);
+            s = weatherInfo.condition.wind;
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 100);
+        }
+
+        public void update(Weather.WeatherInfo current) {
+            this.weatherInfo = current;
+        }
+    }
+
+    static class SunriseSunset implements UI {
+
+        private final Image sunriseSunsetImage;
+        private Weather.WeatherInfo weatherInfo;
+
+        SunriseSunset(WeatherIcon icons) throws Exception {
+            sunriseSunsetImage = icons.get("eclipse");
+        }
+
+        @Override
+        public void render(Gfx gfx, Graphics2D g) {
+            gfx.drawImage(sunriseSunsetImage, gfx.fromRight(70 + sunriseSunsetImage.getWidth(null)), 0);
+            String s = SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.rise);
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
+            s = SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.set);
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 65);
+        }
+
+        public void update(Weather.WeatherInfo weatherInfo) {
+            this.weatherInfo = weatherInfo;
+        }
+    }
+
+    public void render(Gfx gfx, SlideshowCanvas.Fonts fonts, Weather.WeatherInfo weatherInfo, int y) {
         weatherExtract = weatherExtract.update(weatherInfo);
+        sunriseSunset.update(weatherInfo);
+        currentCondition.update(weatherInfo);
 
-        g.drawImage(sunriseSunsetImage, g.fromRight(70 + sunriseSunsetImage.getWidth(null)), y);
-        g.setFont(fonts.calendar.font);
-        g.setColor(WHITE);
-        drawString(g, SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.rise), screenSize, -8, y + 45);
-        drawString(g, SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.set), screenSize, -8, y + 65);
+        gfx.setFont(fonts.calendar.font);
+        gfx.setColor(WHITE);
 
+        gfx.render(0, y, sunriseSunset);
 
-        Image now = icons.get(weatherInfo.condition.current);
-        g.drawImage(now, g.fromRight(70 + now.getWidth(null)), y + 80);
-        drawString(g, "" + weatherInfo.temperature.current, screenSize, -8, y + 125);
-        drawString(g, "" + weatherInfo.temperature.min, screenSize, -45, y + 140);
-        drawString(g, "" + weatherInfo.temperature.max, screenSize, -8, y + 140);
-        drawString(g, weatherInfo.condition.current, screenSize, -8, y + 160);
-        drawString(g, weatherInfo.condition.wind, screenSize, -8, y + 180);
-
-        renderForecastDay(g, screenSize, weatherExtract.today, y + 200);
-        renderForecastDay(g, screenSize, weatherExtract.tomorrow, y + 250);
-        renderForecastDay(g, screenSize, weatherExtract.dayAfterTomorrow, y + 300);
+        gfx.render(0, y + 80, currentCondition);
+        gfx.render(0, gfx.fromTop(y + 200), today);
+        gfx.render(0, gfx.fromTop(y + 250), tomorrow);
+        gfx.render(0, gfx.fromTop(y + 300), dayAfterTomorrow);
     }
 
+    static class Forecast implements UI {
 
-    private void renderForecastDay(SlideshowCanvas.Gfx g, Dimension screenSize, Forecast_8_12_16 forecast, int y) throws Exception {
-        drawImage(g, icons.get(forecast._8.symbol, 50), screenSize, -100, y);
-        centerString(g, "" + forecast._8.temperature, screenSize, -125, y + 50);
-        drawImage(g, icons.get(forecast._12.symbol, 50), screenSize, -50, y);
-        centerString(g, "" + forecast._12.temperature, screenSize, -75, y + 50);
-        drawImage(g, icons.get(forecast._16.symbol, 50), screenSize, -1, y);
-        centerString(g, "" + forecast._16.temperature, screenSize, -26, y + 50);
-    }
+        private final WeatherIcon icons;
+        private final Supplier<Forecast_8_12_16> getter;
 
-    private void centerString(SlideshowCanvas.Gfx g, String s, Dimension screenSize, int x, int y) {
-        Rectangle2D size = g.getStringBounds(s);
-        x = (x < 0) ? screenSize.width + x : x;
-        g.drawString(s, (int) (x - size.getWidth() / 2), y);
-    }
-
-    private void drawImage(SlideshowCanvas.Gfx g, Image i, Dimension screenSize, int x, int y) {
-        if (x < 0) {
-            g.drawImage(i, screenSize.width - i.getWidth(null) + x, y);
-        } else {
-            g.drawImage(i, x, y);
+        Forecast(WeatherIcon icons, Supplier<Forecast_8_12_16> getter) {
+            this.icons = icons;
+            this.getter = getter;
         }
-    }
 
-    private void drawString(SlideshowCanvas.Gfx g, String s, Dimension screenSize, int x, int y) {
-        if (x >= 0 && y >= 0) {
-            g.drawString(s, x, y);
-        }
-        if (y < 0) {
-            throw new RuntimeException("nyo");
-        }
-        if (x < 0) {
-            Rectangle2D bounds = g.getStringBounds(s);
-            g.drawString(s, (int) (screenSize.width - bounds.getWidth() + x), y);
+        @Override
+        public void render(Gfx gfx, Graphics2D g) throws Exception {
+            Forecast_8_12_16 forecast = getter.get();
+            gfx.drawImage(icons.get(forecast._8.symbol, 50), gfx.fromRight(150), 0);
+            gfx.drawImage(icons.get(forecast._12.symbol, 50), gfx.fromRight(100), 0);
+            gfx.drawImage(icons.get(forecast._16.symbol, 50), gfx.fromRight(50), 0);
+            gfx.centerString("" + forecast._8.temperature, gfx.fromRight(125), 50);
+            gfx.centerString("" + forecast._12.temperature, gfx.fromRight(75), 50);
+            gfx.centerString("" + forecast._16.temperature, gfx.fromRight(25), 50);
         }
     }
 
@@ -91,10 +132,10 @@ public class WeatherUi {
         Weather.Forecast _12;
         Weather.Forecast _16;
 
-        public Forecast_8_12_16(List<Weather.Forecast> forecasts) {
-            _8 = forecasts.stream().min(new HourComparator(8)).get();
-            _12 = forecasts.stream().min(new HourComparator(12)).get();
-            _16 = forecasts.stream().min(new HourComparator(16)).get();
+        Forecast_8_12_16(List<Weather.Forecast> forecasts) {
+            forecasts.stream().min(new HourComparator(8)).ifPresent(f -> _8 = f);
+            forecasts.stream().min(new HourComparator(12)).ifPresent(f -> _12 = f);
+            forecasts.stream().min(new HourComparator(16)).ifPresent(f -> _16 = f);
         }
     }
 
@@ -142,7 +183,12 @@ public class WeatherUi {
 
         @Override
         public boolean equals(Object obj) {
-            return ((HourComparator) obj).hour == this.hour;
+            if (!(obj instanceof HourComparator)) {
+                return false;
+            }
+
+            HourComparator hourComparator = (HourComparator) obj;
+            return hourComparator.hour == this.hour;
         }
 
     }
