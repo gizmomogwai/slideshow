@@ -1,6 +1,7 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.Database;
+import com.flopcode.slideshow.utils.FileScanner;
 import com.flopcode.slideshow.weather.Weather;
 
 import javax.swing.JFrame;

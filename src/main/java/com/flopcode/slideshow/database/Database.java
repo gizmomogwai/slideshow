@@ -19,8 +19,7 @@ public class Database extends HandlerThread {
     private List<DatabaseImage> allImages = new ArrayList<>();
     private FilteredList filteredImages = new FilteredList();
 
-
-    public Database() throws Exception {
+    public Database() {
         start();
         fileReceiver = new Handler(getLooper()) {
             @Override
@@ -81,7 +80,7 @@ public class Database extends HandlerThread {
         private List<DatabaseImage> images = new ArrayList<>();
         private Predicate<DatabaseImage> filter;
 
-        public FilteredList() {
+        FilteredList() {
             now = LocalDate.now();
             updatePredicate();
         }

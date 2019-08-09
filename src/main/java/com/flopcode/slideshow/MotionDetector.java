@@ -11,13 +11,15 @@ import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
 import mindroid.os.Message;
 
-public class MotionDetector extends HandlerThread {
+class MotionDetector extends HandlerThread {
 
+    private static final int ON = 1;
+    private static final int OFF = 0;
     private final Handler mPause;
     private final Handler mResume;
     private Handler activate;
 
-    public MotionDetector(Handler pause, Handler resume) {
+    MotionDetector(Handler pause, Handler resume) {
         mPause = pause;
         mResume = resume;
         start();
@@ -26,7 +28,7 @@ public class MotionDetector extends HandlerThread {
             @Override
             public void handleMessage(Message msg) {
                 try {
-                    String onOff = msg.what == 1 ? "on" : "off";
+                    String onOff = handleIncomingMessage(msg);
                     Process process = new ProcessBuilder("xset", "dpms", "force", onOff).start();
                     int res = process.waitFor();
                     if (res != 0) {
@@ -38,6 +40,15 @@ public class MotionDetector extends HandlerThread {
                 // loop every 50 seconds
                 sendMessageDelayed(new Message().setWhat(msg.what), 50000);
                 msg.recycle();
+            }
+
+            private String handleIncomingMessage(Message msg) {
+                if (msg.what == ON) {
+                    mResume.sendEmptyMessage(0);
+                    return "on";
+                }
+                mPause.sendEmptyMessage(0);
+                return "off";
             }
         };
 
@@ -56,13 +67,13 @@ public class MotionDetector extends HandlerThread {
         }
     }
 
-    Message createKeepOnMessage() {
-        return new Message().setWhat(1);
+    private Message createKeepOnMessage() {
+        return new Message().setWhat(ON);
     }
 
     private void handleState(PinState state) {
-        activate.removeMessages(0);
-        activate.removeMessages(1);
+        activate.removeMessages(OFF);
+        activate.removeMessages(ON);
         if (state == PinState.HIGH) {
             System.out.println("MotionDetector.MotionDetector - keeping on");
             activate.sendMessage(createKeepOnMessage());
@@ -73,6 +84,6 @@ public class MotionDetector extends HandlerThread {
     }
 
     private Message createSwitchOffMessage() {
-        return new Message().setWhat(0);
+        return new Message().setWhat(OFF);
     }
 }

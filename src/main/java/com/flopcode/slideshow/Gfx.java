@@ -37,7 +37,7 @@ public class Gfx {
         graphics.setComposite(composite);
     }
 
-    public void render(int x, int y, UI ui) {
+    public void render(UI ui, int x, int y) {
         AffineTransform store = graphics.getTransform();
         graphics.translate(x, y);
         try {

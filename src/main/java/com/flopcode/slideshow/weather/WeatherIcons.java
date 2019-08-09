@@ -7,7 +7,7 @@ import java.util.Objects;
 
 import static java.awt.Image.SCALE_AREA_AVERAGING;
 
-class WeatherIcon {
+class WeatherIcons {
 
     private HashMap<String, String> condition2Icon = new HashMap<String, String>() {
         {

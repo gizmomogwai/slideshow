@@ -2,14 +2,10 @@ package com.flopcode.slideshow.database;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.lang.GeoLocation;
-import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
-import com.drew.metadata.Tag;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.exif.GpsDirectory;
-import com.drew.metadata.jpeg.JpegDirectory;
 
-import java.awt.Dimension;
 import java.io.File;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -26,12 +22,10 @@ import static java.nio.channels.Channels.newInputStream;
 public class DatabaseImage {
     public final LocalDate creationData;
     public final GeoLocation geoLocation;
-    final Path path;
-    final Dimension size;
+    private final Path path;
 
-    public DatabaseImage(Path path, Dimension size, LocalDate creationData, GeoLocation geoLocation) {
+    private DatabaseImage(Path path, LocalDate creationData, GeoLocation geoLocation) {
         this.path = path;
-        this.size = size;
         this.creationData = creationData;
         this.geoLocation = geoLocation;
     }
@@ -39,13 +33,12 @@ public class DatabaseImage {
     public static DatabaseImage create(Path path) throws Exception {
         Metadata metadata = readMetadata(path);
         // printMetadata(path, metadata);
-        Dimension size = getSize(path, metadata);
-        GeoLocation gps = getGps(path, metadata);
+        GeoLocation gps = getGps(metadata);
         LocalDate creationDate = getCreationDate(path, metadata);
-        return new DatabaseImage(path, size, creationDate, gps);
+        return new DatabaseImage(path, creationDate, gps);
     }
 
-    private static GeoLocation getGps(Path path, Metadata metadata) {
+    private static GeoLocation getGps(Metadata metadata) {
         GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
         if (gpsDirectory != null) {
             return gpsDirectory.getGeoLocation();
@@ -60,7 +53,7 @@ public class DatabaseImage {
         }
     }
 
-    private static LocalDate getCreationDate(Path path, Metadata metadata) throws Exception {
+    private static LocalDate getCreationDate(Path path, Metadata metadata) {
         try {
             ExifSubIFDDirectory dateDirectory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
             if (dateDirectory == null) {
@@ -83,34 +76,8 @@ public class DatabaseImage {
         }
     }
 
-    private static Dimension getSize(Path path, Metadata metadata) throws Exception {
-        Directory jpegDirectory = metadata.getFirstDirectoryOfType(JpegDirectory.class);
-        if (jpegDirectory == null) {
-            throw new Exception("Cannot find JpegDirectory for " + path);
-        }
-        int width = jpegDirectory.getInt(JpegDirectory.TAG_IMAGE_WIDTH);
-        int height = jpegDirectory.getInt(JpegDirectory.TAG_IMAGE_HEIGHT);
-        return new Dimension(width, height);
-    }
-
-    private static void printMetadata(Path path, Metadata metadata) {
-        System.out.println("path = " + path);
-        for (Directory directory : metadata.getDirectories()) {
-            System.out.println("  directory = " + directory);
-            for (Tag tag : directory.getTags()) {
-                System.out.format("    [%s] - %s = %s\n",
-                        directory.getName(), tag.getTagName(), tag.getDescription());
-            }
-            if (directory.hasErrors()) {
-                for (String error : directory.getErrors()) {
-                    System.err.format("    ERROR: %s\n", error);
-                }
-            }
-        }
-    }
-
     public static DatabaseImage dummy() {
-        return new DatabaseImage(Paths.get("."), new Dimension(1, 1), LocalDate.now(), null);
+        return new DatabaseImage(Paths.get("."), LocalDate.now(), null);
     }
 
     public File getFile() {

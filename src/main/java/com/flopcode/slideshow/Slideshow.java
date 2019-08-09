@@ -10,7 +10,7 @@ import mindroid.os.Message;
 import java.awt.Dimension;
 import java.time.Duration;
 
-public class Slideshow extends HandlerThread {
+class Slideshow extends HandlerThread {
 
     private static final Duration NEXT_IMAGE = Duration.ofSeconds(20);
     final Handler weather;

@@ -1,4 +1,4 @@
-package com.flopcode.slideshow;
+package com.flopcode.slideshow.utils;
 
 import com.flopcode.slideshow.database.DatabaseImage;
 import mindroid.os.Bundle;
@@ -52,9 +52,9 @@ public class FileScanner extends Thread {
                         return FileVisitResult.CONTINUE;
                     }
                 });
-                long endTime = System.currentTimeMillis();
+                // long endTime = System.currentTimeMillis();
                 // System.out.println("read database of " + allImages.size() + " in " + (endTime - startTime) / 1000 + "s");
-                //finished();
+                // finished();
             } catch (Exception e) {
                 e.printStackTrace();
             }
