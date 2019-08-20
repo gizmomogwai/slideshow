@@ -1,5 +1,6 @@
 package com.flopcode.slideshow;
 
+import com.flopcode.slideshow.database.Database;
 import com.flopcode.slideshow.database.DatabaseImage;
 import com.flopcode.slideshow.weather.Weather;
 import com.flopcode.slideshow.weather.WeatherUI;
@@ -40,26 +41,85 @@ import static java.time.format.TextStyle.SHORT_STANDALONE;
 public class SlideshowCanvas extends Canvas {
     private final GeoLocationCache geoLocationCache;
     private final Dimension screenSize;
-    private final MoonUI moonUi;
-    private final CalendarUI calendarUi;
-    private final WeatherUI weatherUi;
+    private final OnTop onTop;
     private Fonts fonts;
     private BufferStrategy buffers;
     private SlideshowImage current;
     private Weather.WeatherInfo weatherInfo;
 
-    SlideshowCanvas(Dimension screenSize, GeoLocationCache geoLocationCache) throws Exception {
+    class OnTop implements UI {
+
+        private final Fonts fonts;
+        private final CalendarUI calendarUi;
+        private final MoonUI moonUi;
+        private final WeatherUI weatherUi;
+        private final StatisticsUI statisticsUi;
+
+        public OnTop(Fonts fonts, CalendarUI calendarUi, MoonUI moonUi, WeatherUI weatherUi, StatisticsUI statisticsUi) {
+            this.fonts = fonts;
+            this.calendarUi = calendarUi;
+            this.moonUi = moonUi;
+            this.weatherUi = weatherUi;
+            this.statisticsUi = statisticsUi;
+        }
+
+        @Override
+        public void render(Gfx gfx, Graphics2D g) throws Exception {
+            gfx.render(calendarUi, 0, 0);
+
+            gfx.render(moonUi, gfx.fromRight(80), gfx.fromTop(30));
+            renderWeather(gfx, weatherUi, weatherInfo, 100);
+
+            gfx.render(statisticsUi, gfx.fromRight(10), gfx.fromBottom(10));
+        }
+
+        private void renderWeather(Gfx gfx, WeatherUI ui, Weather.WeatherInfo weatherInfo, int y) {
+            try {
+                ui.update(weatherInfo);
+                gfx.render(ui, 0, y);
+            } catch (Exception e) {
+                System.out.println("SlideshowCanvas.renderWeather - " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    SlideshowCanvas(Dimension screenSize, GeoLocationCache geoLocationCache, Whiteboard whiteboard) throws Exception {
         this.geoLocationCache = geoLocationCache;
         Moon moon = new Moon();
-        moonUi = new MoonUI(moon);
         fonts = new Fonts(this, createFont(TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf"))));
-        weatherUi = new WeatherUI(fonts);
         PublicHolidays publicHolidays = new PublicHolidays();
 
-        calendarUi = new CalendarUI(screenSize, fonts, publicHolidays);
         setIgnoreRepaint(true);
         this.screenSize = screenSize;
         current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, TYPE_BYTE_GRAY), fonts.subtitles, geoLocationCache);
+        onTop = new OnTop(fonts,
+                new CalendarUI(screenSize, fonts, publicHolidays),
+                new MoonUI(moon),
+                new WeatherUI(fonts),
+                new StatisticsUI(screenSize, fonts, whiteboard));
+    }
+
+    static class StatisticsUI implements UI {
+        private final Dimension screenSize;
+        private final Fonts fonts;
+        private final Whiteboard whiteboard;
+
+        public StatisticsUI(Dimension screenSize, Fonts fonts, Whiteboard whiteboard) {
+            this.screenSize = screenSize;
+            this.fonts = fonts;
+            this.whiteboard = whiteboard;
+        }
+
+        @Override
+        public void render(Gfx gfx, Graphics2D g) throws Exception {
+            Database.Statistics statistics = (Database.Statistics) whiteboard.get("databaseStatistics");
+            if (statistics != null) {
+                gfx.setFont(fonts.calendar.font);
+                gfx.drawStringRightAligned("" + statistics.filteredImages + " / " + statistics.totalImages, 0, 0);
+            }
+        }
     }
 
     private <T> void renderDoubleBuffered(Dimension screenSize, T context, BiConsumer<Gfx, T> renderer) {
@@ -92,11 +152,7 @@ public class SlideshowCanvas extends Canvas {
                 g.setComposite(AlphaComposite.getInstance(SRC_OVER, alpha));
                 nextImage.render(g, screenSize);
 
-
-                g.render(calendarUi, 0, 0);
-
-                g.render(moonUi, g.fromRight(80), g.fromTop(30));
-                renderWeather(g, weatherUi, weatherInfo, 100);
+                g.render(onTop, 0, 0);
             });
         }
 
@@ -106,9 +162,8 @@ public class SlideshowCanvas extends Canvas {
         renderDoubleBuffered(screenSize, null, (g, nothing) -> {
             g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
             current.render(g, screenSize);
-            g.render(calendarUi, 0, 0);
-            g.render(moonUi, fromLeft(screenSize, 80), fromTop(30));
-            renderWeather(g, weatherUi, weatherInfo, 100);
+
+            g.render(onTop, 0, 0);
         });
     }
 
@@ -118,17 +173,6 @@ public class SlideshowCanvas extends Canvas {
 
     private int fromLeft(Dimension screenSize, int offset) {
         return screenSize.width - offset;
-    }
-
-
-    private void renderWeather(Gfx gfx, WeatherUI ui, Weather.WeatherInfo weatherInfo, int y) {
-        try {
-            ui.update(weatherInfo);
-            gfx.render(ui, 0, y);
-        } catch (Exception e) {
-            System.out.println("SlideshowCanvas.renderWeather - " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 
     static class CalendarUI implements UI {
@@ -197,10 +241,12 @@ public class SlideshowCanvas extends Canvas {
 
     public static class Fonts {
         public final com.flopcode.slideshow.Font calendar;
-        private final com.flopcode.slideshow.Font subtitles;
+        public final com.flopcode.slideshow.Font subtitles;
+        public final com.flopcode.slideshow.Font weather;
 
         Fonts(Component c, Font baseFont) {
             this.subtitles = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(48f));
+            this.weather = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(32f));
             this.calendar = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(20f));
         }
     }

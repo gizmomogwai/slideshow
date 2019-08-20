@@ -1,5 +1,6 @@
 package com.flopcode.slideshow.database;
 
+import com.flopcode.slideshow.Whiteboard;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
@@ -12,6 +13,7 @@ import java.util.function.Predicate;
 
 public class Database extends HandlerThread {
 
+    private final Whiteboard whiteboard;
     public Handler fileReceiver;
     public Handler imageRequest;
     private Handler requestor = null;
@@ -19,7 +21,18 @@ public class Database extends HandlerThread {
     private List<DatabaseImage> allImages = new ArrayList<>();
     private FilteredList filteredImages = new FilteredList();
 
-    public Database() {
+    public static class Statistics {
+        public final int totalImages;
+        public final int filteredImages;
+
+        Statistics(int totalImages, int filteredImages) {
+            this.totalImages = totalImages;
+            this.filteredImages = filteredImages;
+        }
+    }
+
+    public Database(Whiteboard whiteboard) {
+        this.whiteboard = whiteboard;
         start();
         fileReceiver = new Handler(getLooper()) {
             @Override
@@ -59,6 +72,7 @@ public class Database extends HandlerThread {
         if (filteredImages.add(databaseImage)) {
             sendBackToRequestor();
         }
+        whiteboard.set("databaseStatistics", new Statistics(allImages.size(), filteredImages.images.size()));
     }
 
     private void sendBackToRequestor() {

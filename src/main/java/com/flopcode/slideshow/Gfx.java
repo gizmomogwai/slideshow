@@ -51,8 +51,9 @@ public class Gfx {
     public int fromRight(int x) {
         return graphics.getClipBounds().width - x;
     }
+
     public int fromRight(double x) {
-        return fromRight((int)x);
+        return fromRight((int) x);
     }
 
     public int fromTop(int y) {
@@ -75,8 +76,17 @@ public class Gfx {
         graphics.drawString(s, x, y);
     }
 
+    public void drawStringRightAligned(String s, int x, int y) {
+        Rectangle2D size = getStringBounds(s);
+        graphics.drawString(s, (int) (x - size.getWidth()), y);
+    }
+
     public void centerString(String s, int x, int y) {
         Rectangle2D size = getStringBounds(s);
         graphics.drawString(s, (int) (x - size.getWidth() / 2), y);
+    }
+
+    public int fromBottom(int y) {
+        return graphics.getClipBounds().height - y;
     }
 }

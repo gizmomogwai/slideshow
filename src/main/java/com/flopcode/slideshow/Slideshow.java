@@ -12,7 +12,7 @@ import java.time.Duration;
 
 class Slideshow extends HandlerThread {
 
-    private static final Duration NEXT_IMAGE = Duration.ofSeconds(20);
+    private static final Duration NEXT_IMAGE = Duration.ofSeconds(2);
     final Handler weather;
     final Handler pause;
     final Handler resume;
@@ -22,10 +22,10 @@ class Slideshow extends HandlerThread {
     SlideshowCanvas canvas;
     private boolean paused = false;
 
-    Slideshow(Handler db, Dimension screenSize) throws Exception {
+    Slideshow(Handler db, Dimension screenSize, Whiteboard whiteboard) throws Exception {
         this.database = db;
         GeoLocationCache geoLocationCache = new GeoLocationCache();
-        canvas = new SlideshowCanvas(screenSize, geoLocationCache);
+        canvas = new SlideshowCanvas(screenSize, geoLocationCache, whiteboard);
 
         start();
         imageAvailable = new Handler(getLooper()) {

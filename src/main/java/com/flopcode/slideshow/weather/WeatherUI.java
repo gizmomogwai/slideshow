@@ -39,15 +39,16 @@ public class WeatherUI implements UI, WithWeatherInfo {
 
     @Override
     public void render(Gfx gfx, Graphics2D g) {
-        gfx.setFont(fonts.calendar.font);
+        gfx.setFont(fonts.weather.font);
         gfx.setColor(WHITE);
 
         gfx.render(sunriseSunset, 0, 0);
 
-        gfx.render(currentCondition, 0, 80);
-        gfx.render(today, 0, gfx.fromTop(200));
-        gfx.render(tomorrow, 0, gfx.fromTop(250));
-        gfx.render(dayAfterTomorrow, 0, gfx.fromTop(300));
+        gfx.render(currentCondition, 0, 100);
+
+        gfx.render(today, 0, gfx.fromTop(250));
+        gfx.render(tomorrow, 0, gfx.fromTop(310));
+        gfx.render(dayAfterTomorrow, 0, gfx.fromTop(370));
     }
 
     static class CurrentCondition implements UI, WithWeatherInfo {
@@ -61,19 +62,21 @@ public class WeatherUI implements UI, WithWeatherInfo {
 
         @Override
         public void render(Gfx gfx, Graphics2D g) throws Exception {
-            Image now = icons.get(weatherInfo.condition.current);
-            gfx.drawImage(now, gfx.fromRight(70 + now.getWidth(null)), 0);
+            if (weatherInfo != null) {
+                Image now = icons.get(weatherInfo.condition.current);
+                gfx.drawImage(now, gfx.fromRight(80 + now.getWidth(null)), 0);
 
-            String s = "" + weatherInfo.temperature.current;
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
-            s = "" + weatherInfo.temperature.min;
-            gfx.drawString(s, gfx.fromRight(45 + gfx.getStringBounds(s).getWidth()), 60);
-            s = "" + weatherInfo.temperature.max;
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 60);
-            s = weatherInfo.condition.current;
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 80);
-            s = weatherInfo.condition.wind;
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 100);
+                String s = "" + weatherInfo.temperature.current;
+                gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
+                s = "" + weatherInfo.temperature.min;
+                gfx.drawString(s, gfx.fromRight(50 + gfx.getStringBounds(s).getWidth()), 70);
+                s = "" + weatherInfo.temperature.max;
+                gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 70);
+                s = weatherInfo.condition.current;
+                gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 95);
+                s = weatherInfo.condition.wind;
+                gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 120);
+            }
         }
 
         public void update(Weather.WeatherInfo current) {
@@ -92,11 +95,13 @@ public class WeatherUI implements UI, WithWeatherInfo {
 
         @Override
         public void render(Gfx gfx, Graphics2D g) {
-            gfx.drawImage(sunriseSunsetImage, gfx.fromRight(70 + sunriseSunsetImage.getWidth(null)), 0);
-            String s = SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.rise);
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
-            s = SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.set);
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 65);
+            if (weatherInfo != null) {
+                gfx.drawImage(sunriseSunsetImage, gfx.fromRight(80 + sunriseSunsetImage.getWidth(null)), 0);
+                String s = SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.rise);
+                gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
+                s = SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.set);
+                gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 70);
+            }
         }
 
         public void update(Weather.WeatherInfo weatherInfo) {
@@ -105,6 +110,7 @@ public class WeatherUI implements UI, WithWeatherInfo {
     }
 
     public void update(Weather.WeatherInfo weatherInfo) {
+
         weatherExtract.update(weatherInfo);
         sunriseSunset.update(weatherInfo);
         currentCondition.update(weatherInfo);
@@ -128,12 +134,14 @@ public class WeatherUI implements UI, WithWeatherInfo {
         @Override
         public void render(Gfx gfx, Graphics2D g) throws Exception {
             Forecast_8_12_16 forecast = getter.get();
-            gfx.drawImage(icons.get(forecast._8.symbol, 50), gfx.fromRight(150), 0);
-            gfx.drawImage(icons.get(forecast._12.symbol, 50), gfx.fromRight(100), 0);
-            gfx.drawImage(icons.get(forecast._16.symbol, 50), gfx.fromRight(50), 0);
-            gfx.centerString("" + forecast._8.temperature, gfx.fromRight(125), 50);
-            gfx.centerString("" + forecast._12.temperature, gfx.fromRight(75), 50);
-            gfx.centerString("" + forecast._16.temperature, gfx.fromRight(25), 50);
+            if (forecast != null) {
+                gfx.drawImage(icons.get(forecast._8.symbol, 50), gfx.fromRight(150), 0);
+                gfx.drawImage(icons.get(forecast._12.symbol, 50), gfx.fromRight(100), 0);
+                gfx.drawImage(icons.get(forecast._16.symbol, 50), gfx.fromRight(50), 0);
+                gfx.centerString("" + forecast._8.temperature, gfx.fromRight(125), 60);
+                gfx.centerString("" + forecast._12.temperature, gfx.fromRight(75), 60);
+                gfx.centerString("" + forecast._16.temperature, gfx.fromRight(25), 60);
+            }
         }
     }
 

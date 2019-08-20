@@ -29,14 +29,16 @@ public class Main {
         System.setProperty("awt.useSystemAAFontSettings", "on");
         System.setProperty("swing.aatext", "true");
 
+        Whiteboard whiteboard = new Whiteboard();
+
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         System.out.println("screenSize = " + screenSize);
         // screenSize.width /= 2;
         // screenSize.height /= 2;
 
-        Database db = new Database();
+        Database db = new Database(whiteboard);
         FileScanner scanner = new FileScanner(db.fileReceiver, args);
-        Slideshow slideshow = new Slideshow(db.imageRequest, screenSize);
+        Slideshow slideshow = new Slideshow(db.imageRequest, screenSize, whiteboard);
         MotionDetector motionDetector = new MotionDetector(slideshow.pause, slideshow.resume);
         Weather weather = new Weather(slideshow.weather);
 
