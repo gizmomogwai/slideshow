@@ -40,7 +40,7 @@ public class Main {
         FileScanner scanner = new FileScanner(db.fileReceiver, args);
         Slideshow slideshow = new Slideshow(db.imageRequest, screenSize, whiteboard);
         MotionDetector motionDetector = new MotionDetector(slideshow.pause, slideshow.resume);
-        Weather weather = new Weather(slideshow.weather);
+        Weather weather = new Weather(whiteboard);
 
         slideshow.canvas.setPreferredSize(screenSize);
         slideshow.canvas.setSize(screenSize);

@@ -1,7 +1,6 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.DatabaseImage;
-import com.flopcode.slideshow.weather.Weather.WeatherInfo;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
@@ -13,7 +12,6 @@ import java.time.Duration;
 class Slideshow extends HandlerThread {
 
     private static final Duration NEXT_IMAGE = Duration.ofSeconds(2);
-    final Handler weather;
     final Handler pause;
     final Handler resume;
     private final Handler database;
@@ -25,9 +23,9 @@ class Slideshow extends HandlerThread {
     Slideshow(Handler db, Dimension screenSize, Whiteboard whiteboard) throws Exception {
         this.database = db;
         GeoLocationCache geoLocationCache = new GeoLocationCache();
-        canvas = new SlideshowCanvas(screenSize, geoLocationCache, whiteboard);
 
         start();
+        canvas = new SlideshowCanvas(new Handler(getLooper()), screenSize, geoLocationCache, whiteboard);
         imageAvailable = new Handler(getLooper()) {
             @Override
             public void handleMessage(Message msg) {
@@ -45,7 +43,6 @@ class Slideshow extends HandlerThread {
                     e.printStackTrace();
                 }
                 nextStep.sendMessageDelayed(new Message(), NEXT_IMAGE.toMillis());
-                msg.recycle();
             }
         };
         nextStep = new Handler(getLooper()) {
@@ -57,7 +54,6 @@ class Slideshow extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                msg.recycle();
             }
         };
         pause = new Handler(getLooper()) {
@@ -68,7 +64,6 @@ class Slideshow extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                msg.recycle();
             }
         };
         resume = new Handler(getLooper()) {
@@ -80,17 +75,8 @@ class Slideshow extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                msg.recycle();
             }
 
-        };
-        weather = new Handler(getLooper()) {
-            @Override
-            public void handleMessage(Message msg) {
-                WeatherInfo w = (WeatherInfo) msg.obj;
-                canvas.setWeatherUi(w);
-                msg.recycle();
-            }
         };
     }
 

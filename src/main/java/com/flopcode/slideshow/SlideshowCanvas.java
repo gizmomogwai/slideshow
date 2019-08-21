@@ -2,8 +2,8 @@ package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.Database;
 import com.flopcode.slideshow.database.DatabaseImage;
-import com.flopcode.slideshow.weather.Weather;
 import com.flopcode.slideshow.weather.WeatherUI;
+import mindroid.os.Handler;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
@@ -45,7 +45,6 @@ public class SlideshowCanvas extends Canvas {
     private Fonts fonts;
     private BufferStrategy buffers;
     private SlideshowImage current;
-    private Weather.WeatherInfo weatherInfo;
 
     class OnTop implements UI {
 
@@ -68,24 +67,13 @@ public class SlideshowCanvas extends Canvas {
             gfx.render(calendarUi, 0, 0);
 
             gfx.render(moonUi, gfx.fromRight(80), gfx.fromTop(30));
-            renderWeather(gfx, weatherUi, weatherInfo, 100);
+            gfx.render(weatherUi, 0, 100);
 
             gfx.render(statisticsUi, gfx.fromRight(10), gfx.fromBottom(10));
         }
-
-        private void renderWeather(Gfx gfx, WeatherUI ui, Weather.WeatherInfo weatherInfo, int y) {
-            try {
-                ui.update(weatherInfo);
-                gfx.render(ui, 0, y);
-            } catch (Exception e) {
-                System.out.println("SlideshowCanvas.renderWeather - " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
     }
 
-    SlideshowCanvas(Dimension screenSize, GeoLocationCache geoLocationCache, Whiteboard whiteboard) throws Exception {
+    SlideshowCanvas(Handler handler, Dimension screenSize, GeoLocationCache geoLocationCache, Whiteboard whiteboard) throws Exception {
         this.geoLocationCache = geoLocationCache;
         Moon moon = new Moon();
         fonts = new Fonts(this, createFont(TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf"))));
@@ -97,7 +85,7 @@ public class SlideshowCanvas extends Canvas {
         onTop = new OnTop(fonts,
                 new CalendarUI(screenSize, fonts, publicHolidays),
                 new MoonUI(moon),
-                new WeatherUI(fonts),
+                new WeatherUI(handler, whiteboard, fonts),
                 new StatisticsUI(screenSize, fonts, whiteboard));
     }
 
@@ -233,10 +221,6 @@ public class SlideshowCanvas extends Canvas {
     @SuppressWarnings("unused")
     private Image scaleToHeight(BufferedImage image, Dimension size) {
         return image.getScaledInstance(-1, size.height, SCALE_SMOOTH);
-    }
-
-    void setWeatherUi(Weather.WeatherInfo w) {
-        this.weatherInfo = w;
     }
 
     public static class Fonts {

@@ -1,7 +1,6 @@
 package com.flopcode.slideshow.weather;
 
-import mindroid.os.Handler;
-import mindroid.os.Message;
+import com.flopcode.slideshow.Whiteboard;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -37,10 +36,10 @@ import static java.time.Duration.ofMinutes;
 public class Weather extends Thread {
 
     private static final String APP_ID = "9d8617eb77cba019774d79121d412a0e";
-    private final Handler weather;
+    private final Whiteboard whiteboard;
 
-    public Weather(Handler weather) {
-        this.weather = weather;
+    public Weather(Whiteboard whiteboard) {
+        this.whiteboard = whiteboard;
         start();
     }
 
@@ -73,7 +72,7 @@ public class Weather extends Thread {
 
         WeatherInfo weatherInfo = new WeatherInfo(current, forecast);
 
-        weather.sendMessage(new Message().setObject(weatherInfo));
+        whiteboard.set("weatherInfo", weatherInfo);
     }
 
     private Document getDocument(String s) throws IOException, ParserConfigurationException, SAXException {
