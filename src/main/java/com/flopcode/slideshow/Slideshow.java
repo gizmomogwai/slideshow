@@ -20,12 +20,13 @@ class Slideshow extends HandlerThread {
     SlideshowCanvas canvas;
     private boolean paused = false;
 
-    Slideshow(Handler db, Dimension screenSize, Whiteboard whiteboard) throws Exception {
+    Slideshow(Handler db, Whiteboard whiteboard, Dimension screenSize) throws Exception {
         this.database = db;
         GeoLocationCache geoLocationCache = new GeoLocationCache();
 
         start();
-        canvas = new SlideshowCanvas(new Handler(getLooper()), screenSize, geoLocationCache, whiteboard);
+        Handler handler = new Handler(getLooper());
+        canvas = new SlideshowCanvas(new WhiteboardForHandler(whiteboard, handler), screenSize, geoLocationCache);
         imageAvailable = new Handler(getLooper()) {
             @Override
             public void handleMessage(Message msg) {

@@ -1,9 +1,12 @@
 package com.flopcode.slideshow;
 
-import com.flopcode.slideshow.database.Database;
 import com.flopcode.slideshow.database.DatabaseImage;
-import com.flopcode.slideshow.weather.WeatherUI;
-import mindroid.os.Handler;
+import com.flopcode.slideshow.ui.CalendarUI;
+import com.flopcode.slideshow.ui.Gfx;
+import com.flopcode.slideshow.ui.MoonUI;
+import com.flopcode.slideshow.ui.OnTopUI;
+import com.flopcode.slideshow.ui.StatisticsUI;
+import com.flopcode.slideshow.ui.WeatherUI;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
@@ -41,39 +44,12 @@ import static java.time.format.TextStyle.SHORT_STANDALONE;
 public class SlideshowCanvas extends Canvas {
     private final GeoLocationCache geoLocationCache;
     private final Dimension screenSize;
-    private final OnTop onTop;
+    private final OnTopUI onTop;
     private Fonts fonts;
     private BufferStrategy buffers;
     private SlideshowImage current;
 
-    class OnTop implements UI {
-
-        private final Fonts fonts;
-        private final CalendarUI calendarUi;
-        private final MoonUI moonUi;
-        private final WeatherUI weatherUi;
-        private final StatisticsUI statisticsUi;
-
-        public OnTop(Fonts fonts, CalendarUI calendarUi, MoonUI moonUi, WeatherUI weatherUi, StatisticsUI statisticsUi) {
-            this.fonts = fonts;
-            this.calendarUi = calendarUi;
-            this.moonUi = moonUi;
-            this.weatherUi = weatherUi;
-            this.statisticsUi = statisticsUi;
-        }
-
-        @Override
-        public void render(Gfx gfx, Graphics2D g) throws Exception {
-            gfx.render(calendarUi, 0, 0);
-
-            gfx.render(moonUi, gfx.fromRight(80), gfx.fromTop(30));
-            gfx.render(weatherUi, 0, 100);
-
-            gfx.render(statisticsUi, gfx.fromRight(10), gfx.fromBottom(10));
-        }
-    }
-
-    SlideshowCanvas(Handler handler, Dimension screenSize, GeoLocationCache geoLocationCache, Whiteboard whiteboard) throws Exception {
+    SlideshowCanvas(WhiteboardForHandler whiteboardForHandler, Dimension screenSize, GeoLocationCache geoLocationCache) throws Exception {
         this.geoLocationCache = geoLocationCache;
         Moon moon = new Moon();
         fonts = new Fonts(this, createFont(TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf"))));
@@ -82,32 +58,11 @@ public class SlideshowCanvas extends Canvas {
         setIgnoreRepaint(true);
         this.screenSize = screenSize;
         current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, TYPE_BYTE_GRAY), fonts.subtitles, geoLocationCache);
-        onTop = new OnTop(fonts,
+        onTop = new OnTopUI(fonts,
                 new CalendarUI(screenSize, fonts, publicHolidays),
                 new MoonUI(moon),
-                new WeatherUI(handler, whiteboard, fonts),
-                new StatisticsUI(screenSize, fonts, whiteboard));
-    }
-
-    static class StatisticsUI implements UI {
-        private final Dimension screenSize;
-        private final Fonts fonts;
-        private final Whiteboard whiteboard;
-
-        public StatisticsUI(Dimension screenSize, Fonts fonts, Whiteboard whiteboard) {
-            this.screenSize = screenSize;
-            this.fonts = fonts;
-            this.whiteboard = whiteboard;
-        }
-
-        @Override
-        public void render(Gfx gfx, Graphics2D g) throws Exception {
-            Database.Statistics statistics = (Database.Statistics) whiteboard.get("databaseStatistics");
-            if (statistics != null) {
-                gfx.setFont(fonts.calendar.font);
-                gfx.drawStringRightAligned("" + statistics.filteredImages + " / " + statistics.totalImages, 0, 0);
-            }
-        }
+                new WeatherUI(whiteboardForHandler, fonts),
+                new StatisticsUI(screenSize, fonts, whiteboardForHandler));
     }
 
     private <T> void renderDoubleBuffered(Dimension screenSize, T context, BiConsumer<Gfx, T> renderer) {
@@ -154,50 +109,6 @@ public class SlideshowCanvas extends Canvas {
             g.render(onTop, 0, 0);
         });
     }
-
-    private int fromTop(int y) {
-        return y;
-    }
-
-    private int fromLeft(Dimension screenSize, int offset) {
-        return screenSize.width - offset;
-    }
-
-    static class CalendarUI implements UI {
-
-        final Dimension screenSize;
-        final Fonts fonts;
-        private final PublicHolidays publicHolidays;
-
-        CalendarUI(Dimension screenSize, Fonts fonts, PublicHolidays publicHolidays) {
-            this.screenSize = screenSize;
-            this.fonts = fonts;
-            this.publicHolidays = publicHolidays;
-        }
-
-        @Override
-        public void render(Gfx gfx, Graphics2D g) {
-            Locale locale = Locale.ENGLISH;
-            LocalDate now = LocalDate.now();
-
-            CalendarBackground.render(g, screenSize);
-            CalendarDate.render(g, fonts.subtitles, now, locale);
-            CalendarLine.render(g, 230, fonts.calendar, now, publicHolidays);
-        }
-    }
-
-    static class MoonUI implements UI {
-        final Moon moon;
-
-        MoonUI(Moon moon) {
-            this.moon = moon;
-        }
-
-        public void render(Gfx gfx, Graphics2D g) {
-            moon.getPhase().render(g, 0, 0);
-        }
-    }
-
 
     private Image loadImage(File file, Dimension screenSize) throws Exception {
         try {
@@ -247,7 +158,7 @@ public class SlideshowCanvas extends Canvas {
         }
     }
 
-    private static class PublicHolidays {
+    public static class PublicHolidays {
         HashSet<LocalDate> publicHolidays = new HashSet<>();
 
         {
@@ -295,12 +206,12 @@ public class SlideshowCanvas extends Canvas {
         }
     }
 
-    private static class CalendarLine {
+    public static class CalendarLine {
         private static final int FIRST_LINE_Y = 50;
         private static final int SECOND_LINE_Y = 75;
         private static final int STEP_WIDTH = 40;
 
-        static void render(Graphics2D g, int offset, com.flopcode.slideshow.Font smallFont, LocalDate now, PublicHolidays publicHolidays) {
+        public static void render(Graphics2D g, int offset, com.flopcode.slideshow.Font smallFont, LocalDate now, PublicHolidays publicHolidays) {
             LocalDate current = LocalDate.of(now.getYear(), now.getMonth(), 1);
             int i = 1;
             ColorScheme colorScheme = new ColorScheme(Color.white, Color.red, new Color(0x71A95A));
@@ -336,8 +247,8 @@ public class SlideshowCanvas extends Canvas {
 
     }
 
-    private static class CalendarBackground {
-        static void render(Graphics2D g, Dimension screenSize) {
+    public static class CalendarBackground {
+        public static void render(Graphics2D g, Dimension screenSize) {
             g.setComposite(AlphaComposite.getInstance(SRC_OVER, 1.0f));
             g.setColor(new Color(0, 0, 0, 0.7f));
             g.setStroke(new BasicStroke(1.5f));
@@ -345,8 +256,8 @@ public class SlideshowCanvas extends Canvas {
         }
     }
 
-    private static class CalendarDate {
-        static void render(Graphics2D g, com.flopcode.slideshow.Font bigFont, LocalDate now, Locale locale) {
+    public static class CalendarDate {
+        public static void render(Graphics2D g, com.flopcode.slideshow.Font bigFont, LocalDate now, Locale locale) {
             g.setFont(bigFont.font);
             g.setColor(Color.WHITE);
             String dateFirstLine = now.getDayOfWeek().getDisplayName(SHORT_STANDALONE, locale) + " " + now.getDayOfMonth() + ".";

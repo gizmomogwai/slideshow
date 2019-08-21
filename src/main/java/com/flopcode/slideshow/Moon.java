@@ -10,7 +10,7 @@ import java.util.Objects;
 
 import static java.awt.Image.SCALE_AREA_AVERAGING;
 
-class Moon {
+public class Moon {
     private Phase current;
 
     Moon() throws Exception {
@@ -18,7 +18,7 @@ class Moon {
         current = new Phase(images, 0);
     }
 
-    Phase getPhase() {
+    public Phase getPhase() {
         current = current.revalidateForToday();
         return current;
     }
@@ -55,8 +55,8 @@ class Moon {
             return new Phase(images, currentPhase);
         }
 
-        void render(Graphics2D g, int x, int y) {
-            g.drawImage(image, x, y, null);
+        public void render(Graphics2D g) {
+            g.drawImage(image, 0, 0, null);
         }
 
     }

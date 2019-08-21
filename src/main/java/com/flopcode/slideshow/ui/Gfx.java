@@ -1,4 +1,4 @@
-package com.flopcode.slideshow;
+package com.flopcode.slideshow.ui;
 
 import java.awt.Color;
 import java.awt.Composite;
@@ -12,7 +12,7 @@ import java.awt.geom.Rectangle2D;
 public class Gfx {
     final Graphics2D graphics;
 
-    Gfx(Graphics2D graphics, int x, int y, int width, int height) {
+    public Gfx(Graphics2D graphics, int x, int y, int width, int height) {
         this.graphics = graphics;
         this.graphics.setClip(x, y, width, height);
     }

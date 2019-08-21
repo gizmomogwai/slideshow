@@ -38,7 +38,7 @@ public class Main {
 
         Database db = new Database(whiteboard);
         FileScanner scanner = new FileScanner(db.fileReceiver, args);
-        Slideshow slideshow = new Slideshow(db.imageRequest, screenSize, whiteboard);
+        Slideshow slideshow = new Slideshow(db.imageRequest, whiteboard, screenSize);
         MotionDetector motionDetector = new MotionDetector(slideshow.pause, slideshow.resume);
         Weather weather = new Weather(whiteboard);
 

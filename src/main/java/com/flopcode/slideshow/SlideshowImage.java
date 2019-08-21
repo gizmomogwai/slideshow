@@ -1,6 +1,7 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.database.DatabaseImage;
+import com.flopcode.slideshow.ui.Gfx;
 import org.w3c.dom.Document;
 
 import javax.xml.parsers.DocumentBuilder;

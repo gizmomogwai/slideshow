@@ -1,4 +1,4 @@
-package com.flopcode.slideshow;
+package com.flopcode.slideshow.ui;
 
 import java.awt.Graphics2D;
 

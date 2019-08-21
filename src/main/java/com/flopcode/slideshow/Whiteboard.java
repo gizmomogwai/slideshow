@@ -12,6 +12,7 @@ public class Whiteboard {
 
     public interface Observer {
         void valueChanged(String key, Object value);
+
         Handler getHandler();
     }
 
@@ -41,9 +42,5 @@ public class Whiteboard {
         for (Observer o : listOfObservers) {
             o.getHandler().post(() -> o.valueChanged(key, value));
         }
-    }
-
-    public synchronized Object get(String key) {
-        return data.get(key);
     }
 }
