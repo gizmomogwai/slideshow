@@ -1,20 +1,20 @@
-package com.flopcode.slideshow;
+package com.flopcode.slideshow.data.moon;
 
 import org.shredzone.commons.suncalc.MoonIllumination;
 
-import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.util.Objects;
 
 import static java.awt.Image.SCALE_AREA_AVERAGING;
+import static java.util.Objects.requireNonNull;
+import static javax.imageio.ImageIO.read;
 
 public class Moon {
     private Phase current;
 
-    Moon() throws Exception {
-        BufferedImage images = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("moon_blurred_8.png")));
+    public Moon() throws Exception {
+        BufferedImage images = read(requireNonNull(getClass().getClassLoader().getResourceAsStream("moon_blurred_8.png")));
         current = new Phase(images, 0);
     }
 

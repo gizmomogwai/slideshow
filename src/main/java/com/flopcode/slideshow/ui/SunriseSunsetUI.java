@@ -14,8 +14,8 @@
 package com.flopcode.slideshow.ui;
 
 import com.flopcode.slideshow.WhiteboardForHandler;
-import com.flopcode.slideshow.weather.Weather;
-import com.flopcode.slideshow.weather.WeatherIcons;
+import com.flopcode.slideshow.data.weather.WeatherIcons;
+import com.flopcode.slideshow.processes.Weather;
 
 import java.awt.Graphics2D;
 import java.awt.Image;

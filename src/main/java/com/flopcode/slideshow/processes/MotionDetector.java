@@ -1,4 +1,4 @@
-package com.flopcode.slideshow;
+package com.flopcode.slideshow.processes;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
@@ -11,7 +11,7 @@ import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
 import mindroid.os.Message;
 
-class MotionDetector extends HandlerThread {
+public class MotionDetector extends HandlerThread {
 
     private static final int ON = 1;
     private static final int OFF = 0;
@@ -19,7 +19,7 @@ class MotionDetector extends HandlerThread {
     private final Handler mResume;
     private Handler activate;
 
-    MotionDetector(Handler pause, Handler resume) {
+    public MotionDetector(Handler pause, Handler resume) {
         mPause = pause;
         mResume = resume;
         start();

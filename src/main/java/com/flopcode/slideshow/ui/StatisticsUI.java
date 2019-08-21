@@ -2,7 +2,7 @@ package com.flopcode.slideshow.ui;
 
 import com.flopcode.slideshow.SlideshowCanvas;
 import com.flopcode.slideshow.WhiteboardForHandler;
-import com.flopcode.slideshow.database.Database;
+import com.flopcode.slideshow.processes.Database;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -13,7 +13,7 @@ public class StatisticsUI implements UI {
     private final WhiteboardForHandler whiteboard;
     Database.Statistics statistics;
 
-    public StatisticsUI(Dimension screenSize, SlideshowCanvas.Fonts fonts, WhiteboardForHandler whiteboard) {
+    public StatisticsUI(WhiteboardForHandler whiteboard, Dimension screenSize, SlideshowCanvas.Fonts fonts) {
         this.screenSize = screenSize;
         this.fonts = fonts;
         whiteboard.add("databaseStatistics", (key, value) -> statistics = (Database.Statistics) value);

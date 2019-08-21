@@ -1,6 +1,6 @@
 package com.flopcode.slideshow;
 
-import com.flopcode.slideshow.database.DatabaseImage;
+import com.flopcode.slideshow.data.images.DatabaseImage;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.HandlerThread;

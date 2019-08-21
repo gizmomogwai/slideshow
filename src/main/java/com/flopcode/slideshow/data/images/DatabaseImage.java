@@ -1,4 +1,4 @@
-package com.flopcode.slideshow.database;
+package com.flopcode.slideshow.data.images;
 
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.lang.GeoLocation;

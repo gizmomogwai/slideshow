@@ -1,4 +1,4 @@
-package com.flopcode.slideshow.weather;
+package com.flopcode.slideshow.data.weather;
 
 import javax.imageio.ImageIO;
 import java.awt.Image;

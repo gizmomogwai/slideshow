@@ -1,6 +1,7 @@
 package com.flopcode.slideshow;
 
-import com.flopcode.slideshow.database.DatabaseImage;
+import com.flopcode.slideshow.data.images.DatabaseImage;
+import com.flopcode.slideshow.data.moon.Moon;
 import com.flopcode.slideshow.ui.CalendarUI;
 import com.flopcode.slideshow.ui.Gfx;
 import com.flopcode.slideshow.ui.MoonUI;
@@ -62,7 +63,7 @@ public class SlideshowCanvas extends Canvas {
                 new CalendarUI(screenSize, fonts, publicHolidays),
                 new MoonUI(moon),
                 new WeatherUI(whiteboardForHandler, fonts),
-                new StatisticsUI(screenSize, fonts, whiteboardForHandler));
+                new StatisticsUI(whiteboardForHandler, screenSize, fonts));
     }
 
     private <T> void renderDoubleBuffered(Dimension screenSize, T context, BiConsumer<Gfx, T> renderer) {
@@ -135,14 +136,14 @@ public class SlideshowCanvas extends Canvas {
     }
 
     public static class Fonts {
-        public final com.flopcode.slideshow.Font calendar;
-        public final com.flopcode.slideshow.Font subtitles;
-        public final com.flopcode.slideshow.Font weather;
+        public final com.flopcode.slideshow.ui.Font calendar;
+        public final com.flopcode.slideshow.ui.Font subtitles;
+        public final com.flopcode.slideshow.ui.Font weather;
 
         Fonts(Component c, Font baseFont) {
-            this.subtitles = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(48f));
-            this.weather = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(32f));
-            this.calendar = new com.flopcode.slideshow.Font(c, baseFont.deriveFont(20f));
+            this.subtitles = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(48f));
+            this.weather = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(32f));
+            this.calendar = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(20f));
         }
     }
 
@@ -211,7 +212,7 @@ public class SlideshowCanvas extends Canvas {
         private static final int SECOND_LINE_Y = 75;
         private static final int STEP_WIDTH = 40;
 
-        public static void render(Graphics2D g, int offset, com.flopcode.slideshow.Font smallFont, LocalDate now, PublicHolidays publicHolidays) {
+        public static void render(Graphics2D g, int offset, com.flopcode.slideshow.ui.Font smallFont, LocalDate now, PublicHolidays publicHolidays) {
             LocalDate current = LocalDate.of(now.getYear(), now.getMonth(), 1);
             int i = 1;
             ColorScheme colorScheme = new ColorScheme(Color.white, Color.red, new Color(0x71A95A));
@@ -224,7 +225,7 @@ public class SlideshowCanvas extends Canvas {
             }
         }
 
-        static private void centerDay(Graphics2D g, LocalDate date, int offset, int i, com.flopcode.slideshow.Font font, boolean currentDay, Color color) {
+        static private void centerDay(Graphics2D g, LocalDate date, int offset, int i, com.flopcode.slideshow.ui.Font font, boolean currentDay, Color color) {
             g.setFont(font.font);
 
             String dayOfMonth = "" + date.getDayOfMonth();
@@ -257,7 +258,7 @@ public class SlideshowCanvas extends Canvas {
     }
 
     public static class CalendarDate {
-        public static void render(Graphics2D g, com.flopcode.slideshow.Font bigFont, LocalDate now, Locale locale) {
+        public static void render(Graphics2D g, com.flopcode.slideshow.ui.Font bigFont, LocalDate now, Locale locale) {
             g.setFont(bigFont.font);
             g.setColor(Color.WHITE);
             String dateFirstLine = now.getDayOfWeek().getDisplayName(SHORT_STANDALONE, locale) + " " + now.getDayOfMonth() + ".";

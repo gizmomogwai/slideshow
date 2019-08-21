@@ -6,10 +6,6 @@ public class WhiteboardForHandler {
     private final Whiteboard whiteboard;
     private final Handler handler;
 
-    public interface Observer {
-        void valueChanged(String key, Object value);
-    }
-
     public WhiteboardForHandler(Whiteboard whiteboard, Handler handler) {
         this.whiteboard = whiteboard;
         this.handler = handler;
@@ -28,6 +24,10 @@ public class WhiteboardForHandler {
             }
         });
         return this;
+    }
+
+    public interface Observer {
+        void valueChanged(String key, Object value);
     }
 }
 

@@ -1,4 +1,4 @@
-package com.flopcode.slideshow.weather;
+package com.flopcode.slideshow.processes;
 
 import com.flopcode.slideshow.Whiteboard;
 import org.w3c.dom.Document;
@@ -210,6 +210,5 @@ public class Weather extends Thread {
                 forecasts.add(new Forecast(date, symbol.evaluate(forecast), Math.round(Float.parseFloat(temperature.evaluate(forecast)))));
             }
         }
-
     }
 }

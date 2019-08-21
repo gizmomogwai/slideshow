@@ -1,8 +1,9 @@
 package com.flopcode.slideshow;
 
-import com.flopcode.slideshow.database.Database;
-import com.flopcode.slideshow.utils.FileScanner;
-import com.flopcode.slideshow.weather.Weather;
+import com.flopcode.slideshow.processes.Database;
+import com.flopcode.slideshow.processes.FileScanner;
+import com.flopcode.slideshow.processes.MotionDetector;
+import com.flopcode.slideshow.processes.Weather;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;

@@ -1,6 +1,6 @@
 package com.flopcode.slideshow.ui;
 
-import com.flopcode.slideshow.weather.WeatherIcons;
+import com.flopcode.slideshow.data.weather.WeatherIcons;
 
 import java.awt.Graphics2D;
 import java.util.function.Supplier;

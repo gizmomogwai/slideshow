@@ -1,6 +1,7 @@
-package com.flopcode.slideshow.database;
+package com.flopcode.slideshow.processes;
 
 import com.flopcode.slideshow.Whiteboard;
+import com.flopcode.slideshow.data.images.DatabaseImage;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
@@ -20,16 +21,6 @@ public class Database extends HandlerThread {
 
     private List<DatabaseImage> allImages = new ArrayList<>();
     private FilteredList filteredImages = new FilteredList();
-
-    public static class Statistics {
-        public final int totalImages;
-        public final int filteredImages;
-
-        Statistics(int totalImages, int filteredImages) {
-            this.totalImages = totalImages;
-            this.filteredImages = filteredImages;
-        }
-    }
 
     public Database(Whiteboard whiteboard) {
         this.whiteboard = whiteboard;
@@ -85,6 +76,16 @@ public class Database extends HandlerThread {
 
     public DatabaseImage next() {
         return filteredImages.next();
+    }
+
+    public static class Statistics {
+        public final int totalImages;
+        public final int filteredImages;
+
+        Statistics(int totalImages, int filteredImages) {
+            this.totalImages = totalImages;
+            this.filteredImages = filteredImages;
+        }
     }
 
     static class FilteredList {

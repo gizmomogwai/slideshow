@@ -1,6 +1,7 @@
 package com.flopcode.slideshow;
 
-import com.flopcode.slideshow.database.DatabaseImage;
+import com.flopcode.slideshow.data.images.DatabaseImage;
+import com.flopcode.slideshow.ui.Font;
 import com.flopcode.slideshow.ui.Gfx;
 import org.w3c.dom.Document;
 
@@ -170,7 +171,6 @@ class SlideshowImage {
         graphics.setColor(new Color(0, 0, 0, 0.7f));
         graphics.fillRect(0, screenSize.height - 60, screenSize.width, 60);
         text(graphics, title, screenSize.height - font.metrics.getMaxDescent() - 5);
-        //text(graphics, locationText, screenSize, screenSize.height - metrics.getAscent() * 2 - 5);
     }
 
     private void center(Gfx graphics, Dimension screenSize, Image image) {
@@ -180,18 +180,6 @@ class SlideshowImage {
     private void text(Gfx graphics, String text, int y) {
         graphics.setFont(font.font);
         int x = font.metrics.getMaxDescent() + 5;
-/*
-        graphics.setColor(Color.black);
-
-        for (int i = -1; i <= 1; ++i) {
-
-            for (int j = -1; j <= 1; ++j) {
-                if (i != 0 && j != 0) {
-                    graphics.drawString(text, x - i, y - j);
-                }
-            }
-        }
- */
         graphics.setColor(Color.white);
         graphics.drawString(text, x, y);
     }

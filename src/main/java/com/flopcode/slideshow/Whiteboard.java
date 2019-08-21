@@ -10,37 +10,40 @@ import java.util.Map;
 
 public class Whiteboard {
 
-    public interface Observer {
-        void valueChanged(String key, Object value);
-
-        Handler getHandler();
-    }
-
     Map<String, Object> data = new HashMap<>();
-
     Map<String, List<Observer>> observers = new HashMap<>();
 
-    public synchronized Whiteboard add(String key, Observer observer) {
-        List<Observer> current = observers.get(key);
-        if (current == null) {
-            current = new ArrayList<>();
+    public Whiteboard add(String key, Observer observer) {
+        synchronized (this) {
+            List<Observer> current = observers.get(key);
+            if (current == null) {
+                current = new ArrayList<>();
+            }
+            current.add(observer);
+            observers.put(key, current);
         }
-        current.add(observer);
-        observers.put(key, current);
         observer.getHandler().post(() -> observer.valueChanged(key, data.get(key)));
         return this;
     }
 
-    public synchronized void set(String key, Object value) {
+    public void set(String key, Object value) {
         data.put(key, value);
+        synchronized (this) {
+            List<Observer> listOfObservers = observers.get(key);
+            if (listOfObservers == null) {
+                return;
+            }
 
-        List<Observer> listOfObservers = observers.get(key);
-        if (listOfObservers == null) {
-            return;
+            for (Observer o : listOfObservers) {
+                o.getHandler().post(() -> o.valueChanged(key, value));
+            }
         }
+    }
 
-        for (Observer o : listOfObservers) {
-            o.getHandler().post(() -> o.valueChanged(key, value));
-        }
+    public interface Observer {
+
+        void valueChanged(String key, Object value);
+
+        Handler getHandler();
     }
 }

@@ -1,6 +1,6 @@
 package com.flopcode.slideshow.ui;
 
-import com.flopcode.slideshow.Moon;
+import com.flopcode.slideshow.data.moon.Moon;
 
 import java.awt.Graphics2D;
 
