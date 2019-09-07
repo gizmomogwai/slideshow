@@ -11,7 +11,6 @@ import com.flopcode.slideshow.ui.WeatherUI;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Component;
@@ -26,7 +25,6 @@ import java.io.File;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -40,7 +38,6 @@ import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.image.BufferedImage.TYPE_BYTE_GRAY;
 import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.SUNDAY;
-import static java.time.format.TextStyle.SHORT_STANDALONE;
 
 public class SlideshowCanvas extends Canvas {
     private final GeoLocationCache geoLocationCache;
@@ -139,9 +136,11 @@ public class SlideshowCanvas extends Canvas {
         public final com.flopcode.slideshow.ui.Font calendar;
         public final com.flopcode.slideshow.ui.Font subtitles;
         public final com.flopcode.slideshow.ui.Font weather;
+        public final com.flopcode.slideshow.ui.Font dateTime;
 
         Fonts(Component c, Font baseFont) {
             this.subtitles = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(48f));
+            this.dateTime = this.subtitles;
             this.weather = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(32f));
             this.calendar = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(20f));
         }
@@ -244,27 +243,6 @@ public class SlideshowCanvas extends Canvas {
             g.setColor(color);
             g.drawString(dayOfMonth, offset + i * STEP_WIDTH - ((int) bounds.getWidth() / 2), FIRST_LINE_Y);
             g.drawString(dayOfWeek, offset + i * STEP_WIDTH - ((int) dayOfWeekBounds.getWidth() / 2), SECOND_LINE_Y);
-        }
-
-    }
-
-    public static class CalendarBackground {
-        public static void render(Graphics2D g, Dimension screenSize) {
-            g.setComposite(AlphaComposite.getInstance(SRC_OVER, 1.0f));
-            g.setColor(new Color(0, 0, 0, 0.7f));
-            g.setStroke(new BasicStroke(1.5f));
-            g.fillRect(0, 0, screenSize.width, 120);
-        }
-    }
-
-    public static class CalendarDate {
-        public static void render(Graphics2D g, com.flopcode.slideshow.ui.Font bigFont, LocalDate now, Locale locale) {
-            g.setFont(bigFont.font);
-            g.setColor(Color.WHITE);
-            String dateFirstLine = now.getDayOfWeek().getDisplayName(SHORT_STANDALONE, locale) + " " + now.getDayOfMonth() + ".";
-            String dateSecondLine = now.getMonth().getDisplayName(SHORT_STANDALONE, locale) + " " + now.getYear();
-            g.drawString(dateFirstLine, 20, 50);
-            g.drawString(dateSecondLine, 20, 100);
         }
     }
 }

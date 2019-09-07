@@ -15,7 +15,8 @@ import java.util.stream.Collectors;
 import static java.awt.Color.WHITE;
 
 public class WeatherUI implements UI {
-    public static final DateTimeFormatter SUN_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+
+    public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ForecastUI today;
     private final ForecastUI tomorrow;
@@ -47,9 +48,9 @@ public class WeatherUI implements UI {
 
         gfx.render(currentCondition, 0, 100);
 
-        gfx.render(today, 0, gfx.fromTop(250));
-        gfx.render(tomorrow, 0, gfx.fromTop(310));
-        gfx.render(dayAfterTomorrow, 0, gfx.fromTop(370));
+        gfx.render(today, 0, gfx.fromTop(300));
+        gfx.render(tomorrow, 0, gfx.fromTop(360));
+        gfx.render(dayAfterTomorrow, 0, gfx.fromTop(420));
     }
 
     public static class Forecast_8_12_16 {

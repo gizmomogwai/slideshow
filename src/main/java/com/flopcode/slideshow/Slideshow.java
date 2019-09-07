@@ -11,7 +11,7 @@ import java.time.Duration;
 
 class Slideshow extends HandlerThread {
 
-    private static final Duration NEXT_IMAGE = Duration.ofSeconds(2);
+    private static final Duration NEXT_IMAGE = Duration.ofMinutes(2);
     final Handler pause;
     final Handler resume;
     private final Handler database;

@@ -9,6 +9,7 @@ import java.awt.Image;
 
 class CurrentConditionUI implements UI {
 
+    public static final int LINE_DISTANCE = 34;
     private final WeatherIcons icons;
     private Weather.WeatherInfo weatherInfo;
 
@@ -26,13 +27,13 @@ class CurrentConditionUI implements UI {
             String s = "" + weatherInfo.temperature.current;
             gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
             s = "" + weatherInfo.temperature.min;
-            gfx.drawString(s, gfx.fromRight(50 + gfx.getStringBounds(s).getWidth()), 70);
+            gfx.drawString(s, gfx.fromRight(50 + gfx.getStringBounds(s).getWidth()), 45 + LINE_DISTANCE);
             s = "" + weatherInfo.temperature.max;
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 70);
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + LINE_DISTANCE);
             s = weatherInfo.condition.current;
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 95);
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 2 * LINE_DISTANCE);
             s = weatherInfo.condition.wind;
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 120);
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 3 * LINE_DISTANCE);
         }
     }
 }

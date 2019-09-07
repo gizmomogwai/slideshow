@@ -34,10 +34,10 @@ class SunriseSunsetUI implements UI {
     public void render(Gfx gfx, Graphics2D g) {
         if (weatherInfo != null) {
             gfx.drawImage(sunriseSunsetImage, gfx.fromRight(80 + sunriseSunsetImage.getWidth(null)), 0);
-            String s = WeatherUI.SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.rise);
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
-            s = WeatherUI.SUN_DATE_TIME_FORMATTER.format(weatherInfo.sun.set);
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 70);
+            String s = WeatherUI.TIME_FORMATTER.format(weatherInfo.sun.rise);
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 41);
+            s = WeatherUI.TIME_FORMATTER.format(weatherInfo.sun.set);
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 75);
         }
     }
 }

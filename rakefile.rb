@@ -1,5 +1,5 @@
 # coding: utf-8
-SSH_TARGET = "pi@192.168.0.140"
+SSH_TARGET = "slideshow"
 
 TARGET_PATH = "/home/pi/Pictures/ImageLib"
 
