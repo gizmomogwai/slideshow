@@ -1,6 +1,9 @@
 package com.flopcode.slideshow.processes;
 
 import com.flopcode.slideshow.Whiteboard;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteStreams;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -18,7 +21,11 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
@@ -76,15 +83,22 @@ public class Weather extends Thread {
     }
 
     private Document getDocument(String s) throws IOException, ParserConfigurationException, SAXException {
-        URL url = new URL(s);
-        System.out.println("Weather.getDocument - " + url);
-        URLConnection connection = url.openConnection();
-        connection.setRequestProperty("User-Agent", "slideshow");
-        connection.connect();
-
+        HashCode h = Hashing.sha256().hashBytes(s.getBytes());
+        String pathName = h.toString();
+        File cacheFile = new File(pathName);
+        InputStream in = null;
+        if (!cacheFile.exists()) {
+            URL url = new URL(s);
+            System.out.println("Weather.getDocument - " + url);
+            URLConnection connection = url.openConnection();
+            connection.setRequestProperty("User-Agent", "slideshow");
+            connection.connect();
+            ByteStreams.copy(connection.getInputStream(), new FileOutputStream(cacheFile));
+        }
+        in = new FileInputStream(cacheFile);
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        return documentBuilder.parse(connection.getInputStream());
+        return documentBuilder.parse(in);
     }
 
     private void prettyPrint(Document document) throws Exception {

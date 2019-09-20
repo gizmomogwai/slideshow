@@ -24,6 +24,8 @@ public class WeatherUI implements UI {
     private final SunriseSunsetUI sunriseSunset;
     private final CurrentConditionUI currentCondition;
     private final SlideshowCanvas.Fonts fonts;
+    private final ForecastGraphUI forecastGraph;
+
     private WeatherExtract weatherExtract;
 
     public WeatherUI(WhiteboardForHandler whiteboard, SlideshowCanvas.Fonts fonts) throws Exception {
@@ -37,6 +39,8 @@ public class WeatherUI implements UI {
         today = new ForecastUI(icons, () -> weatherExtract.getToday());
         tomorrow = new ForecastUI(icons, () -> weatherExtract.getTomorrow());
         dayAfterTomorrow = new ForecastUI(icons, () -> weatherExtract.getDayAfterTomorrow());
+
+        forecastGraph = new ForecastGraphUI(() -> weatherExtract.all);
     }
 
     @Override
@@ -46,11 +50,12 @@ public class WeatherUI implements UI {
 
         gfx.render(sunriseSunset, 0, 0);
 
-        gfx.render(currentCondition, 0, 100);
+        gfx.render(currentCondition, 0, 110);
 
-        gfx.render(today, 0, gfx.fromTop(300));
-        gfx.render(tomorrow, 0, gfx.fromTop(360));
-        gfx.render(dayAfterTomorrow, 0, gfx.fromTop(420));
+        gfx.render(today, 0, gfx.fromTop(310));
+        gfx.render(tomorrow, 0, gfx.fromTop(375));
+        gfx.render(dayAfterTomorrow, 0, gfx.fromTop(440));
+        gfx.render(forecastGraph, 0, gfx.fromTop(600));
     }
 
     public static class Forecast_8_12_16 {
@@ -69,6 +74,7 @@ public class WeatherUI implements UI {
         Forecast_8_12_16 today;
         Forecast_8_12_16 tomorrow;
         Forecast_8_12_16 dayAfterTomorrow;
+        List<Weather.Forecast> all;
 
         WeatherExtract(WhiteboardForHandler whiteboard) {
             whiteboard.add("weatherInfo", (key, value) -> update((Weather.WeatherInfo) value));
@@ -79,6 +85,7 @@ public class WeatherUI implements UI {
                 return;
             }
             LocalDate now = LocalDate.now();
+            all = weatherInfo.forecasts.forecasts;
             today = new Forecast_8_12_16(getForecasts(weatherInfo, now));
             tomorrow = new Forecast_8_12_16(getForecasts(weatherInfo, now.plusDays(1)));
             dayAfterTomorrow = new Forecast_8_12_16(getForecasts(weatherInfo, now.plusDays(2)));

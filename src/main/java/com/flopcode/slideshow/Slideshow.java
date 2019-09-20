@@ -11,7 +11,7 @@ import java.time.Duration;
 
 class Slideshow extends HandlerThread {
 
-    private static final Duration NEXT_IMAGE = Duration.ofMinutes(2);
+    private static final Duration NEXT_IMAGE = Duration.ofMinutes(1);
     final Handler pause;
     final Handler resume;
     private final Handler database;
@@ -72,7 +72,7 @@ class Slideshow extends HandlerThread {
             public void handleMessage(Message msg) {
                 try {
                     paused = false;
-                    nextStep.sendMessage(new Message());
+                    // nextStep.sendMessage(new Message());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

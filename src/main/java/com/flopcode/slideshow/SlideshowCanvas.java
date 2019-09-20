@@ -142,7 +142,7 @@ public class SlideshowCanvas extends Canvas {
             this.subtitles = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(48f));
             this.dateTime = this.subtitles;
             this.weather = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(32f));
-            this.calendar = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(20f));
+            this.calendar = new com.flopcode.slideshow.ui.Font(c, baseFont.deriveFont(28f));
         }
     }
 
@@ -207,9 +207,9 @@ public class SlideshowCanvas extends Canvas {
     }
 
     public static class CalendarLine {
-        private static final int FIRST_LINE_Y = 50;
-        private static final int SECOND_LINE_Y = 75;
-        private static final int STEP_WIDTH = 40;
+        private static final int FIRST_LINE_Y = 53;
+        private static final int SECOND_LINE_Y = 82;
+        private static final int STEP_WIDTH = 48;
 
         public static void render(Graphics2D g, int offset, com.flopcode.slideshow.ui.Font smallFont, LocalDate now, PublicHolidays publicHolidays) {
             LocalDate current = LocalDate.of(now.getYear(), now.getMonth(), 1);

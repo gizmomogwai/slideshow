@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 
 public class Gfx {
@@ -89,4 +90,45 @@ public class Gfx {
     public int fromBottom(int y) {
         return graphics.getClipBounds().height - y;
     }
+
+    public void drawLine(int x1, int y1, int x2, int y2) {
+        graphics.drawLine(x1, y1, x2, y2);
+    }
+
+    /*
+
+                x         x
+
+         x                        x
+
+     */
+    public void curveFromTo(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3) {
+        Path2D.Double path = new Path2D.Double();
+        path.moveTo(x1, y1);
+        double cpx1 = x1 + (x2 - x1) * (1 / 3.0);
+        double cpx2 = x1 + (x2 - x1) * (2 / 3.0);
+        double dy1 = y2 - y0;
+        double dy2 = y3 - y1;
+        double cpy1 = y1 + (dy1 / 2 / 3.0);
+        double cpy2 = y2 - (dy2 / 2 / 3.0);
+        /*
+        graphics.setColor(Color.RED);
+        graphics.drawRect((int) x0 - 1, (int) y0 - 1, 3, 3);
+        graphics.drawRect((int) x1 - 1, (int) y1 - 1, 3, 3);
+        graphics.drawRect((int) x2 - 1, (int) y2 - 1, 3, 3);
+        graphics.drawRect((int) x3 - 1, (int) y3 - 1, 3, 3);
+        graphics.setColor(Color.GREEN);
+        graphics.drawRect((int) cpx1 - 1, (int) cpy1 - 1, 3, 3);
+        graphics.drawRect((int) cpx2 - 1, (int) cpy2 - 1, 3, 3);
+*/
+        graphics.setColor(Color.WHITE);
+        path.curveTo(cpx1, cpy1, cpx2, cpy2, x2, y2);
+        graphics.draw(path);
+    }
+
+
+    public void drawRect(int x1, int y1, int x2, int y2) {
+        graphics.drawRect(x1, y1, x2 - x1, y2 - y1);
+    }
+
 }

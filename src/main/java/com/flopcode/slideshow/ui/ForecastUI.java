@@ -22,9 +22,9 @@ class ForecastUI implements UI {
             gfx.drawImage(icons.get(forecast._8.symbol, 50), gfx.fromRight(150), 0);
             gfx.drawImage(icons.get(forecast._12.symbol, 50), gfx.fromRight(100), 0);
             gfx.drawImage(icons.get(forecast._16.symbol, 50), gfx.fromRight(50), 0);
-            gfx.centerString("" + forecast._8.temperature, gfx.fromRight(125), 60);
-            gfx.centerString("" + forecast._12.temperature, gfx.fromRight(75), 60);
-            gfx.centerString("" + forecast._16.temperature, gfx.fromRight(25), 60);
+            gfx.centerString("" + forecast._8.temperature, gfx.fromRight(125), 58);
+            gfx.centerString("" + forecast._12.temperature, gfx.fromRight(75), 58);
+            gfx.centerString("" + forecast._16.temperature, gfx.fromRight(25), 58);
         }
     }
 }
