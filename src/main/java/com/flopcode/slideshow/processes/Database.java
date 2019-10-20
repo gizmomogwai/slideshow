@@ -122,6 +122,7 @@ public class Database extends HandlerThread {
 
         public DatabaseImage next() {
             int index = (int) Math.floor(Math.random() * images.size());
+            System.out.println("FilteredList.next index=" + index + " images.size=" + images.size());
             if (index >= images.size()) {
                 return null;
             }

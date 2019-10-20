@@ -24,7 +24,7 @@ public class WeatherUI implements UI {
     private final SunriseSunsetUI sunriseSunset;
     private final CurrentConditionUI currentCondition;
     private final SlideshowCanvas.Fonts fonts;
-    private final ForecastGraphUI forecastGraph;
+    // private final ForecastGraphUI forecastGraph;
 
     private WeatherExtract weatherExtract;
 
@@ -40,7 +40,7 @@ public class WeatherUI implements UI {
         tomorrow = new ForecastUI(icons, () -> weatherExtract.getTomorrow());
         dayAfterTomorrow = new ForecastUI(icons, () -> weatherExtract.getDayAfterTomorrow());
 
-        forecastGraph = new ForecastGraphUI(() -> weatherExtract.all);
+        // forecastGraph = new ForecastGraphUI(() -> weatherExtract.all);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class WeatherUI implements UI {
         gfx.render(today, 0, gfx.fromTop(310));
         gfx.render(tomorrow, 0, gfx.fromTop(375));
         gfx.render(dayAfterTomorrow, 0, gfx.fromTop(440));
-        gfx.render(forecastGraph, 0, gfx.fromTop(600));
+        //gfx.render(forecastGraph, 0, gfx.fromTop(600));
     }
 
     public static class Forecast_8_12_16 {

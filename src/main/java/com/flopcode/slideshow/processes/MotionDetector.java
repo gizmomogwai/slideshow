@@ -11,6 +11,11 @@ import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
 import mindroid.os.Message;
 
+import java.time.Duration;
+
+/**
+ * Triggers on/off every 50s depending on the last motion detector event.
+ */
 public class MotionDetector extends HandlerThread {
 
     private static final int ON = 1;
@@ -37,8 +42,7 @@ public class MotionDetector extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                // loop every 50 seconds
-                sendMessageDelayed(new Message().setWhat(msg.what), 50000);
+                sendMessageDelayed(new Message().setWhat(msg.what), Duration.ofSeconds(50));
                 msg.recycle();
             }
 
