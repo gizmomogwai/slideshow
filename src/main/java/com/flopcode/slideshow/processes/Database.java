@@ -9,6 +9,7 @@ import mindroid.os.Message;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -92,6 +93,7 @@ public class Database extends HandlerThread {
         private final LocalDate now;
         private List<DatabaseImage> images = new ArrayList<>();
         private Predicate<DatabaseImage> filter;
+        private int index = -1;
 
         FilteredList() {
             now = LocalDate.now();
@@ -105,6 +107,8 @@ public class Database extends HandlerThread {
         public boolean add(DatabaseImage image) {
             if (filter.test(image)) {
                 images.add(image);
+                Collections.shuffle(images);
+                index = -1;
                 return true;
             }
             return false;
@@ -117,11 +121,13 @@ public class Database extends HandlerThread {
                 for (DatabaseImage i : allImages) {
                     add(i);
                 }
+                Collections.shuffle(images);
+                index = -1;
             }
         }
 
         public DatabaseImage next() {
-            int index = (int) Math.floor(Math.random() * images.size());
+            index++;
             System.out.println("FilteredList.next index=" + index + " images.size=" + images.size());
             if (index >= images.size()) {
                 return null;
