@@ -3,9 +3,13 @@ SSH_TARGET = "slideshow"
 
 TARGET_PATH = "/home/pi/Pictures/ImageLib"
 
-desc "Deploy slideshow to target"
-task :deploy do
+desc "Build"
+task :build do
   sh "./gradlew build"
+end
+
+desc "Deploy slideshow to target"
+task :deploy => [:build] do
   sh "ssh #{SSH_TARGET} mkdir -p #{TARGET_PATH}"
   sh "scp build/libs/slideshow-all.jar #{SSH_TARGET}:#{TARGET_PATH}"
   sh "ssh #{SSH_TARGET} touch #{TARGET_PATH}/slideshow-all.jar-updated"
