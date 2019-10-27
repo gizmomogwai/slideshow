@@ -134,3 +134,8 @@ task :show_and_get_server_logs do
   sh "ssh pi@slideshow.local journalctl --user-unit=slideshow | tee logs.txt"
 end
 task :default => [:deploy]
+
+desc "restart server"
+task :restart_server do
+  sh "ssh pi@slideshow.local systemctl restart --user slideshow"
+end
