@@ -127,11 +127,13 @@ public class Database extends HandlerThread {
         }
 
         public DatabaseImage next() {
-            index++;
             System.out.println("FilteredList.next index=" + index + " images.size=" + images.size());
-            if (index >= images.size()) {
+
+            if (images.size() == 0) {
                 return null;
             }
+            index = (index + 1) % images.size();
+
             return images.get(index);
         }
     }
