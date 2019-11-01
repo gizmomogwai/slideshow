@@ -2,7 +2,9 @@ package com.flopcode.slideshow.ui;
 
 import com.flopcode.slideshow.SlideshowCanvas;
 import com.flopcode.slideshow.WhiteboardForHandler;
+import com.flopcode.slideshow.clock.Clock;
 import com.flopcode.slideshow.data.weather.WeatherIcons;
+import com.flopcode.slideshow.logger.Logger;
 import com.flopcode.slideshow.processes.Weather;
 
 import java.awt.Graphics2D;
@@ -28,14 +30,14 @@ public class WeatherUI implements UI {
 
     private WeatherExtract weatherExtract;
 
-    public WeatherUI(WhiteboardForHandler whiteboard, SlideshowCanvas.Fonts fonts) throws Exception {
+    public WeatherUI(Logger logger, Clock clock, WhiteboardForHandler whiteboard, SlideshowCanvas.Fonts fonts) throws Exception {
         this.fonts = fonts;
-        WeatherIcons icons = new WeatherIcons();
+        WeatherIcons icons = new WeatherIcons(logger);
 
         sunriseSunset = new SunriseSunsetUI(whiteboard, icons);
         currentCondition = new CurrentConditionUI(whiteboard, icons);
 
-        weatherExtract = new WeatherExtract(whiteboard);
+        weatherExtract = new WeatherExtract(clock, whiteboard);
         today = new ForecastUI(icons, () -> weatherExtract.getToday());
         tomorrow = new ForecastUI(icons, () -> weatherExtract.getTomorrow());
         dayAfterTomorrow = new ForecastUI(icons, () -> weatherExtract.getDayAfterTomorrow());
@@ -71,12 +73,14 @@ public class WeatherUI implements UI {
     }
 
     private static class WeatherExtract {
+        private final Clock clock;
         Forecast_8_12_16 today;
         Forecast_8_12_16 tomorrow;
         Forecast_8_12_16 dayAfterTomorrow;
         List<Weather.Forecast> all;
 
-        WeatherExtract(WhiteboardForHandler whiteboard) {
+        WeatherExtract(Clock clock, WhiteboardForHandler whiteboard) {
+            this.clock = clock;
             whiteboard.add("weatherInfo", (key, value) -> update((Weather.WeatherInfo) value));
         }
 
@@ -84,7 +88,7 @@ public class WeatherUI implements UI {
             if (weatherInfo == null) {
                 return;
             }
-            LocalDate now = LocalDate.now();
+            LocalDate now = clock.date();
             all = weatherInfo.forecasts.forecasts;
             today = new Forecast_8_12_16(getForecasts(weatherInfo, now));
             tomorrow = new Forecast_8_12_16(getForecasts(weatherInfo, now.plusDays(1)));

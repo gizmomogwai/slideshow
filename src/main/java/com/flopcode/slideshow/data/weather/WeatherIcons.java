@@ -1,5 +1,7 @@
 package com.flopcode.slideshow.data.weather;
 
+import com.flopcode.slideshow.logger.Logger;
+
 import javax.imageio.ImageIO;
 import java.awt.Image;
 import java.util.HashMap;
@@ -25,6 +27,11 @@ public class WeatherIcons {
         }
     };
     private HashMap<String, Image> imageCache = new HashMap<>();
+    private final Logger logger;
+
+    public WeatherIcons(Logger logger) {
+        this.logger = logger;
+    }
 
     public Image get(String current) throws Exception {
         return get(current, 100);
@@ -38,11 +45,14 @@ public class WeatherIcons {
         }
         if (!condition2Icon.containsKey(current)) {
             current = "eclipse";
-            System.out.println("WeatherIcon.get - cannot find " + current);
+            logger.e("WeatherIcon.get - cannot find " + current);
         }
 
         String file = condition2Icon.get(current);
         Image image = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("giallo/" + file + ".png"))).getScaledInstance(size, -1, SCALE_AREA_AVERAGING);
+        if (image == null) {
+            logger.e("Cannot get weather icon for condition '" + current + "'");
+        }
         imageCache.put(key, image);
 
         return imageCache.get(key);

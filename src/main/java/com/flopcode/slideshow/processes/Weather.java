@@ -1,6 +1,7 @@
 package com.flopcode.slideshow.processes;
 
 import com.flopcode.slideshow.Whiteboard;
+import com.flopcode.slideshow.logger.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -38,8 +39,10 @@ public class Weather extends Thread {
 
     private static final String APP_ID = "9d8617eb77cba019774d79121d412a0e";
     private final Whiteboard whiteboard;
+    private final Logger logger;
 
-    public Weather(Whiteboard whiteboard) {
+    public Weather(Logger logger, Whiteboard whiteboard) {
+        this.logger = logger;
         this.whiteboard = whiteboard;
         start();
     }
@@ -66,10 +69,10 @@ public class Weather extends Thread {
 
     private void updateWeather() throws Exception {
         Document forecast = getDocument("http://api.openweathermap.org/data/2.5/forecast?q=Munich,de&appid=" + APP_ID + "&mode=xml&units=metric");
-        prettyPrint(forecast);
+        // prettyPrint(forecast);
 
         Document current = getDocument("http://api.openweathermap.org/data/2.5/weather?q=Munich,de&appid=" + APP_ID + "&mode=xml&units=metric");
-        prettyPrint(current);
+        // prettyPrint(current);
 
         WeatherInfo weatherInfo = new WeatherInfo(current, forecast);
 
@@ -83,7 +86,7 @@ public class Weather extends Thread {
         InputStream in = null;
         //    if (!cacheFile.exists()) {
         URL url = new URL(s);
-        System.out.println("Weather.getDocument - " + url);
+        logger.d("Weather.getDocument - " + url);
         URLConnection connection = url.openConnection();
         connection.setRequestProperty("User-Agent", "slideshow");
         connection.connect();
@@ -102,7 +105,7 @@ public class Weather extends Thread {
         tf.setOutputProperty(OutputKeys.INDENT, "yes");
         Writer out = new StringWriter();
         tf.transform(new DOMSource(document), new StreamResult(out));
-        System.out.println(out.toString());
+        logger.d(out.toString());
     }
 
     public static class WeatherInfo {

@@ -5,6 +5,7 @@ import com.drew.lang.GeoLocation;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.exif.GpsDirectory;
+import com.flopcode.slideshow.logger.Logger;
 
 import java.io.File;
 import java.nio.channels.FileChannel;
@@ -30,11 +31,11 @@ public class DatabaseImage {
         this.geoLocation = geoLocation;
     }
 
-    public static DatabaseImage create(Path path) throws Exception {
+    public static DatabaseImage create(Logger logger, Path path) throws Exception {
         Metadata metadata = readMetadata(path);
         // printMetadata(path, metadata);
         GeoLocation gps = getGps(metadata);
-        LocalDate creationDate = getCreationDate(path, metadata);
+        LocalDate creationDate = getCreationDate(logger, path, metadata);
         return new DatabaseImage(path, creationDate, gps);
     }
 
@@ -47,13 +48,12 @@ public class DatabaseImage {
     }
 
     private static Metadata readMetadata(Path path) throws Exception {
-        System.out.println("path = " + path);
         try (FileChannel channel = FileChannel.open(path)) {
             return ImageMetadataReader.readMetadata(newInputStream(channel));
         }
     }
 
-    private static LocalDate getCreationDate(Path path, Metadata metadata) {
+    private static LocalDate getCreationDate(Logger logger, Path path, Metadata metadata) {
         try {
             ExifSubIFDDirectory dateDirectory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
             if (dateDirectory == null) {
@@ -69,7 +69,7 @@ public class DatabaseImage {
                 LocalDate res = LocalDate.of(Integer.parseInt(matcher.group(1)),
                         Integer.parseInt(matcher.group(2)),
                         Integer.parseInt(matcher.group(3)));
-                System.out.println("Falling back to date from filename " + path + "=" + res);
+                logger.i("Falling back to date from filename " + path + "=" + res);
                 return res;
             }
             throw new RuntimeException("Cannot get date for " + path, e);

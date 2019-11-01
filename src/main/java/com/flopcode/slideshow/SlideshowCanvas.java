@@ -1,7 +1,9 @@
 package com.flopcode.slideshow;
 
+import com.flopcode.slideshow.clock.Clock;
 import com.flopcode.slideshow.data.images.DatabaseImage;
 import com.flopcode.slideshow.data.moon.Moon;
+import com.flopcode.slideshow.logger.Logger;
 import com.flopcode.slideshow.ui.CalendarUI;
 import com.flopcode.slideshow.ui.Gfx;
 import com.flopcode.slideshow.ui.MoonUI;
@@ -47,7 +49,7 @@ public class SlideshowCanvas extends Canvas {
     private BufferStrategy buffers;
     private SlideshowImage current;
 
-    SlideshowCanvas(WhiteboardForHandler whiteboardForHandler, Dimension screenSize, GeoLocationCache geoLocationCache) throws Exception {
+    SlideshowCanvas(Logger logger, Clock clock, WhiteboardForHandler whiteboardForHandler, Dimension screenSize, GeoLocationCache geoLocationCache) throws Exception {
         this.geoLocationCache = geoLocationCache;
         Moon moon = new Moon();
         fonts = new Fonts(this, createFont(TRUETYPE_FONT, Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("FFF Tusj.ttf"))));
@@ -55,11 +57,11 @@ public class SlideshowCanvas extends Canvas {
 
         setIgnoreRepaint(true);
         this.screenSize = screenSize;
-        current = new SlideshowImage(DatabaseImage.dummy(), new BufferedImage(1, 1, TYPE_BYTE_GRAY), fonts.subtitles, geoLocationCache);
+        current = new SlideshowImage(logger, clock, DatabaseImage.dummy(), new BufferedImage(1, 1, TYPE_BYTE_GRAY), fonts.subtitles, geoLocationCache);
         onTop = new OnTopUI(fonts,
-                new CalendarUI(screenSize, fonts, publicHolidays),
+                new CalendarUI(clock, screenSize, fonts, publicHolidays),
                 new MoonUI(moon),
-                new WeatherUI(whiteboardForHandler, fonts),
+                new WeatherUI(logger, clock, whiteboardForHandler, fonts),
                 new StatisticsUI(whiteboardForHandler, screenSize, fonts));
     }
 
@@ -78,11 +80,11 @@ public class SlideshowCanvas extends Canvas {
         buffers.show();
     }
 
-    void transitionTo(DatabaseImage next) throws Exception {
+    void transitionTo(Logger logger, Clock clock, DatabaseImage next) throws Exception {
         if (next == null) {
             throw new IllegalArgumentException();
         }
-        SlideshowImage nextImage = new SlideshowImage(next, loadImage(next.getFile(), screenSize), fonts.subtitles, geoLocationCache);
+        SlideshowImage nextImage = new SlideshowImage(logger, clock, next, loadImage(next.getFile(), screenSize), fonts.subtitles, geoLocationCache);
 
         for (float i = 0; i < 1; i += 0.02) {
 

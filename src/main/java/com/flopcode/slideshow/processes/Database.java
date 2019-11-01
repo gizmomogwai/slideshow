@@ -1,7 +1,9 @@
 package com.flopcode.slideshow.processes;
 
+import com.flopcode.slideshow.clock.Clock;
 import com.flopcode.slideshow.Whiteboard;
 import com.flopcode.slideshow.data.images.DatabaseImage;
+import com.flopcode.slideshow.logger.Logger;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
@@ -15,16 +17,15 @@ import java.util.function.Predicate;
 
 public class Database extends HandlerThread {
 
-    private final Whiteboard whiteboard;
     public Handler fileReceiver;
     public Handler imageRequest;
     private Handler requestor = null;
 
     private List<DatabaseImage> allImages = new ArrayList<>();
-    private FilteredList filteredImages = new FilteredList();
+    private FilteredList filteredImages;
 
-    public Database(Whiteboard whiteboard) {
-        this.whiteboard = whiteboard;
+    public Database(Logger logger, Clock clock, Whiteboard whiteboard) {
+        this.filteredImages = new FilteredList(logger, clock, whiteboard);
         start();
         fileReceiver = new Handler(getLooper()) {
             @Override
@@ -34,7 +35,7 @@ public class Database extends HandlerThread {
                     if (image == null) {
                         throw new IllegalArgumentException("expected image in bundle");
                     }
-                    addImage(image);
+                    addImage(allImages, image);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -57,12 +58,11 @@ public class Database extends HandlerThread {
         };
     }
 
-    private void addImage(DatabaseImage databaseImage) {
+    private void addImage(List<DatabaseImage> allImages, DatabaseImage databaseImage) {
         allImages.add(databaseImage);
-        if (filteredImages.add(databaseImage)) {
+        if (filteredImages.add(allImages, databaseImage)) {
             sendBackToRequestor();
         }
-        whiteboard.set("databaseStatistics", new Statistics(allImages.size(), filteredImages.images.size()));
     }
 
     private void sendBackToRequestor() {
@@ -90,44 +90,47 @@ public class Database extends HandlerThread {
     }
 
     static class FilteredList {
+        private final Logger logger;
+        private final Clock clock;
+        private final Whiteboard whiteboard;
         private final LocalDate now;
         private List<DatabaseImage> images = new ArrayList<>();
         private Predicate<DatabaseImage> filter;
         private int index = -1;
 
-        FilteredList() {
-            now = LocalDate.now();
+        FilteredList(Logger logger, Clock clock, Whiteboard whiteboard) {
+            this.logger = logger;
+            this.clock = clock;
+            this.whiteboard = whiteboard;
+            now = clock.date();
             updatePredicate();
         }
 
         private void updatePredicate() {
-            filter = (image) -> image.creationData.getMonth() == LocalDate.now().getMonth();
+            filter = (image) -> image.creationData.getMonth() == clock.date().getMonth();
         }
 
-        public boolean add(DatabaseImage image) {
+        private boolean add(List<DatabaseImage> allImages, DatabaseImage image) {
             if (filter.test(image)) {
                 images.add(image);
                 Collections.shuffle(images);
                 index = -1;
+                whiteboard.set("databaseStatistics", new Statistics(allImages.size(), images.size()));
                 return true;
             }
             return false;
         }
 
         public void update(List<DatabaseImage> allImages) {
-            if (!LocalDate.now().isEqual(now)) {
+            if (!clock.date().isEqual(now)) {
                 updatePredicate();
                 images = new ArrayList<>();
-                for (DatabaseImage i : allImages) {
-                    add(i);
-                }
-                Collections.shuffle(images);
-                index = -1;
+                allImages.forEach(image -> add(allImages, image));
             }
         }
 
         public DatabaseImage next() {
-            System.out.println("FilteredList.next index=" + index + " images.size=" + images.size());
+            logger.d("FilteredList.next index=" + index + " images.size=" + images.size());
 
             if (images.size() == 0) {
                 return null;

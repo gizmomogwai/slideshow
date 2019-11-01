@@ -1,6 +1,7 @@
 package com.flopcode.slideshow.processes;
 
 import com.flopcode.slideshow.data.images.DatabaseImage;
+import com.flopcode.slideshow.logger.Logger;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.Message;
@@ -19,8 +20,10 @@ public class FileScanner extends Thread {
 
     private final Handler fileReceiver;
     private final String[] baseDirs;
+    private final Logger logger;
 
-    public FileScanner(Handler fileReceiver, String... baseDirs) {
+    public FileScanner(Logger logger, Handler fileReceiver, String... baseDirs) {
+        this.logger = logger;
         this.fileReceiver = fileReceiver;
         this.baseDirs = baseDirs;
         start();
@@ -37,10 +40,10 @@ public class FileScanner extends Thread {
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                         if (matcher.matches(file)) {
                             try {
-                                DatabaseImage dbImage = DatabaseImage.create(file);
+                                DatabaseImage dbImage = DatabaseImage.create(logger, file);
                                 fileReceiver.sendMessage(new Message().setData(new Bundle().putObject("image", dbImage)));
                             } catch (Exception e) {
-                                System.out.println("Problems with " + file + ": " + e.getMessage());
+                                logger.e("Problems with " + file + ": " + e.getMessage());
                                 e.printStackTrace();
                             }
                         }

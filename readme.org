@@ -65,7 +65,7 @@ http://api.openweathermap.org/data/2.5/forecast?q=Munich,de&appid=d1bff471b62008
 
 https://openweathermap.org/weather-conditions
 
-https://stackoverflow.com/questions/12487125/java-how-do-you-convert-a-utc-timestamp-to-local-time
+https://stackoverflow.com/questions/12487125/java-how-do-you-convert-a-utc-timestamp-to-local-clock
 
 should i pick 8 14 17?
 

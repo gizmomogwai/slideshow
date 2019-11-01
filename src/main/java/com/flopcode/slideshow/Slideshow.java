@@ -1,6 +1,8 @@
 package com.flopcode.slideshow;
 
+import com.flopcode.slideshow.clock.Clock;
 import com.flopcode.slideshow.data.images.DatabaseImage;
+import com.flopcode.slideshow.logger.Logger;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
@@ -21,13 +23,13 @@ class Slideshow extends HandlerThread {
     SlideshowCanvas canvas;
     private boolean paused = false;
 
-    Slideshow(Handler db, Whiteboard whiteboard, Dimension screenSize) throws Exception {
+    Slideshow(Logger logger, Clock clock, Handler db, Whiteboard whiteboard, Dimension screenSize) throws Exception {
         this.database = db;
         GeoLocationCache geoLocationCache = new GeoLocationCache();
 
         start();
         Handler handler = new Handler(getLooper());
-        canvas = new SlideshowCanvas(new WhiteboardForHandler(whiteboard, handler), screenSize, geoLocationCache);
+        canvas = new SlideshowCanvas(logger, clock, new WhiteboardForHandler(whiteboard, handler), screenSize, geoLocationCache);
         imageAvailable = new Handler(getLooper()) {
             @Override
             public void handleMessage(Message msg) {
@@ -36,12 +38,12 @@ class Slideshow extends HandlerThread {
                     if (newImage == null) {
                         throw new IllegalArgumentException();
                     }
-                    System.out.println("Slideshow.handleMessage - got image " + newImage);
+                    logger.d("Slideshow.handleMessage - got image " + newImage);
                     if (!paused) {
-                        canvas.transitionTo(newImage);
+                        canvas.transitionTo(logger, clock, newImage);
                     }
                 } catch (Throwable e) {
-                    System.out.println("Slideshow.handleMessage - cannot handle " + newImage);
+                    logger.e("Slideshow.handleMessage - cannot handle " + newImage);
                     e.printStackTrace();
                 }
                 nextStep.sendMessageDelayed(new Message(), NEXT_IMAGE.toMillis());
@@ -51,7 +53,7 @@ class Slideshow extends HandlerThread {
             @Override
             public void handleMessage(Message msg) {
                 try {
-                    System.out.println("Slideshow.nextStep");
+                    logger.d("Slideshow.nextStep");
                     database.sendMessage(new Message().setData(new Bundle().putObject("requestor", imageAvailable)));
                 } catch (Exception e) {
                     e.printStackTrace();

@@ -1,5 +1,9 @@
 package com.flopcode.slideshow;
 
+import com.flopcode.slideshow.clock.Clock;
+import com.flopcode.slideshow.clock.RealClock;
+import com.flopcode.slideshow.logger.Logger;
+import com.flopcode.slideshow.logger.StdoutLogger;
 import com.flopcode.slideshow.processes.Database;
 import com.flopcode.slideshow.processes.FileScanner;
 import com.flopcode.slideshow.processes.MotionDetector;
@@ -9,6 +13,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+
+import static com.flopcode.slideshow.logger.Logger.Level.INFO;
 
 /**
  * Filescanner scans the filesystem and sends imagepaths to the database
@@ -26,22 +32,25 @@ import java.awt.Toolkit;
  * database filters new images if it sees a request it completes this request
  */
 public class Main {
-    public static void main(String[] args) throws Exception {
-        System.setProperty("awt.useSystemAAFontSettings", "on");
-        System.setProperty("swing.aatext", "true");
 
+    public static void main(String[] args) throws Exception {
+        Logger logger = new StdoutLogger(INFO);
+        Clock clock = new RealClock();
         Whiteboard whiteboard = new Whiteboard();
 
+        System.setProperty("awt.useSystemAAFontSettings", "on");
+        System.setProperty("swing.aatext", "true");
+        
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        System.out.println("screenSize = " + screenSize);
+        logger.i("screenSize = " + screenSize);
         // screenSize.width /= 2;
         // screenSize.height /= 2;
 
-        Database db = new Database(whiteboard);
-        FileScanner scanner = new FileScanner(db.fileReceiver, args);
-        Slideshow slideshow = new Slideshow(db.imageRequest, whiteboard, screenSize);
-        MotionDetector motionDetector = new MotionDetector(slideshow.pause, slideshow.resume);
-        Weather weather = new Weather(whiteboard);
+        Database db = new Database(logger, clock, whiteboard);
+        FileScanner scanner = new FileScanner(logger, db.fileReceiver, args);
+        Slideshow slideshow = new Slideshow(logger, clock, db.imageRequest, whiteboard, screenSize);
+        MotionDetector motionDetector = new MotionDetector(logger, slideshow.pause, slideshow.resume);
+        Weather weather = new Weather(logger, whiteboard);
 
         slideshow.canvas.setPreferredSize(screenSize);
         slideshow.canvas.setSize(screenSize);

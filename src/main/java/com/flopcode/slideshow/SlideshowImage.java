@@ -1,6 +1,8 @@
 package com.flopcode.slideshow;
 
+import com.flopcode.slideshow.clock.Clock;
 import com.flopcode.slideshow.data.images.DatabaseImage;
+import com.flopcode.slideshow.logger.Logger;
 import com.flopcode.slideshow.ui.Font;
 import com.flopcode.slideshow.ui.Gfx;
 import org.w3c.dom.Document;
@@ -38,7 +40,7 @@ class SlideshowImage {
         XPathFactory xPathfactory = XPathFactory.newInstance();
         XPath xpath = xPathfactory.newXPath();
         try {
-            detailExpressions = new XPathExpression[]{
+            detailExpressions = new XPathExpression[] {
                     xpath.compile("reversegeocode/addressparts/city/text()"),
                     xpath.compile("reversegeocode/addressparts/town/text()"),
                     xpath.compile("reversegeocode/addressparts/hamlet/text()"),
@@ -55,13 +57,15 @@ class SlideshowImage {
     private final Font font;
     private final GeoLocationCache geoLocationCache;
     private final String title;
+    private Logger logger;
 
 
-    SlideshowImage(DatabaseImage databaseImage, Image image, Font font, GeoLocationCache geoLocationCache) {
+    SlideshowImage(Logger logger, Clock clock, DatabaseImage databaseImage, Image image, Font font, GeoLocationCache geoLocationCache) {
+        this.logger = logger;
         this.image = image;
         this.font = font;
         this.geoLocationCache = geoLocationCache;
-        LocalDate now = LocalDate.now();
+        LocalDate now = clock.date();
         String dateText = textForDate(now, databaseImage);
         String yearText = textForDeltaYears(now, databaseImage);
         String locationText = textForLocation(databaseImage);
@@ -116,7 +120,7 @@ class SlideshowImage {
         tf.setOutputProperty(OutputKeys.INDENT, "yes");
         Writer out = new StringWriter();
         tf.transform(new DOMSource(document), new StreamResult(out));
-        System.out.println(out.toString());
+        logger.d(out.toString());
     }
 
     private String pluralize(String base, int count) {
