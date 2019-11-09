@@ -82,10 +82,12 @@ public class Database extends HandlerThread {
     public static class Statistics {
         public final int totalImages;
         public final int filteredImages;
+        public final int currentImage;
 
-        Statistics(int totalImages, int filteredImages) {
+        Statistics(int totalImages, int filteredImages, int currentImage) {
             this.totalImages = totalImages;
             this.filteredImages = filteredImages;
+            this.currentImage = currentImage;
         }
     }
 
@@ -115,7 +117,7 @@ public class Database extends HandlerThread {
                 images.add(image);
                 Collections.shuffle(images);
                 index = -1;
-                whiteboard.set("databaseStatistics", new Statistics(allImages.size(), images.size()));
+                whiteboard.set("databaseStatistics", new Statistics(allImages.size(), images.size(), index));
                 return true;
             }
             return false;

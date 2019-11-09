@@ -24,7 +24,7 @@ public class StatisticsUI implements UI {
     public void render(Gfx gfx, Graphics2D g) throws Exception {
         if (statistics != null) {
             gfx.setFont(fonts.calendar.font);
-            gfx.drawStringRightAligned("" + statistics.filteredImages + " / " + statistics.totalImages, 0, 0);
+            gfx.drawStringRightAligned("" + statistics.currentImage + " / " + statistics.filteredImages + " / " + statistics.totalImages, 0, 0);
         }
     }
 }
