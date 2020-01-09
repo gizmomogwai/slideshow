@@ -1,7 +1,7 @@
 package com.flopcode.slideshow.processes;
 
-import com.flopcode.slideshow.clock.Clock;
 import com.flopcode.slideshow.Whiteboard;
+import com.flopcode.slideshow.clock.Clock;
 import com.flopcode.slideshow.data.images.DatabaseImage;
 import com.flopcode.slideshow.logger.Logger;
 import mindroid.os.Bundle;
@@ -95,7 +95,8 @@ public class Database extends HandlerThread {
         private final Logger logger;
         private final Clock clock;
         private final Whiteboard whiteboard;
-        private final LocalDate now;
+        private LocalDate now;
+        private List<DatabaseImage> allImages = new ArrayList<>();
         private List<DatabaseImage> images = new ArrayList<>();
         private Predicate<DatabaseImage> filter;
         private int index = -1;
@@ -113,31 +114,42 @@ public class Database extends HandlerThread {
         }
 
         private boolean add(List<DatabaseImage> allImages, DatabaseImage image) {
+            this.allImages = allImages;
             if (filter.test(image)) {
                 images.add(image);
                 Collections.shuffle(images);
                 index = -1;
-                whiteboard.set("databaseStatistics", new Statistics(allImages.size(), images.size(), index));
+                updateStatistics();
                 return true;
             }
+            updateStatistics();
             return false;
+        }
+
+        private void updateStatistics() {
+            Statistics value = new Statistics(allImages.size(), images.size(), index);
+            logger.d("Stats: " + value.currentImage + " / " + value.filteredImages + " / " + value.totalImages);
+            whiteboard.set("databaseStatistics", value);
         }
 
         public void update(List<DatabaseImage> allImages) {
             if (!clock.date().isEqual(now)) {
+                logger.i("Rescan images for " + clock.date());
                 updatePredicate();
                 images = new ArrayList<>();
                 allImages.forEach(image -> add(allImages, image));
+                now = clock.date();
             }
         }
 
         public DatabaseImage next() {
-            logger.d("FilteredList.next index=" + index + " images.size=" + images.size());
+            logger.i("FilteredList.next index=" + index + " images.size=" + images.size() + " allImages.size=" + allImages.size());
 
             if (images.size() == 0) {
                 return null;
             }
             index = (index + 1) % images.size();
+            updateStatistics();
 
             return images.get(index);
         }

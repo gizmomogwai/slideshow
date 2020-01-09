@@ -1,5 +1,5 @@
 # coding: utf-8
-SSH_TARGET = "slideshow"
+SSH_TARGET = "pi@slideshow"
 
 TARGET_PATH = "/home/pi/Pictures/ImageLib"
 
@@ -135,11 +135,16 @@ end
 
 desc 'show and get server logs'
 task :show_and_get_server_logs do
-  sh "ssh pi@slideshow.local journalctl --user-unit=slideshow | tee logs.txt"
+  sh "ssh #{SSH_TARGET} journalctl --user-unit=slideshow | tee logs.txt"
 end
 task :default => [:deploy]
 
 desc "restart server"
 task :restart_server do
-  sh "ssh pi@slideshow.local systemctl restart --user slideshow"
+  sh "ssh #{SSH_TARGET} systemctl restart --user slideshow"
+end
+
+desc "Vaccum logs on the server"
+task :vaccum do
+  sh "ssh #{SSH_TARGET} journalctl --vacuum-time=8h"
 end

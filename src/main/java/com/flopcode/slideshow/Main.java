@@ -1,6 +1,7 @@
 package com.flopcode.slideshow;
 
 import com.flopcode.slideshow.clock.Clock;
+import com.flopcode.slideshow.clock.FakeClock;
 import com.flopcode.slideshow.clock.RealClock;
 import com.flopcode.slideshow.logger.Logger;
 import com.flopcode.slideshow.logger.StdoutLogger;
@@ -14,6 +15,7 @@ import javax.swing.JPanel;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 
+import static com.flopcode.slideshow.logger.Logger.Level.DEBUG;
 import static com.flopcode.slideshow.logger.Logger.Level.INFO;
 
 /**
