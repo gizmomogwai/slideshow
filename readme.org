@@ -9,6 +9,10 @@ Scanning of the database could take place once a day or something
 For fast startup database can be cached in a yaml file but the real
 source is just a filesystem.  
 
+** Installation
+Put the service and path file from src/systemd to ~/.config/systemd/user
+enable and start the slideshow.service and slideshow-watcher.path units.
+
 ** Hardware
 *** RaspberryPi
 *** Motion Sensor
