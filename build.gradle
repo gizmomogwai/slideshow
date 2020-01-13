@@ -28,18 +28,17 @@ shadowJar {
     manifest {
         attributes("Main-Class": "com.flopcode.slideshow.Main")
     }
-//                exclude(
-//                        "moon.png",
-//                        "moon_blurred.png",
-//                        "moon_blurred_5.png",
-//                        "lib/bananapi/**/ * ",
-//    "lib/bananapro/**/*" ,
-//    "lib/bpi/**/*" ,
-//    "lib/nanopi/**/*" ,
-//    "lib/odroid/**/*" ,
-//    "lib/orangepi/**/*"
-//    )
-    }
+    exclude "moon.png"
+    exclude "moon_blurred.png"
+    exclude "moon_blurred_5.png"
+    exclude "lib/bananapi/static/libpi4j.so"
+    exclude "lib/bananapi/**/*"
+    exclude "lib/bananapro/**/*"
+    exclude "lib/bpi/**/*"
+    exclude "lib/nanopi/**/*"
+    exclude "lib/odroid/**/*"
+    exclude "lib/orangepi/**/*"
+}
 
 tasks {
     build {

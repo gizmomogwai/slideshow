@@ -75,5 +75,6 @@ should i pick 8 14 17?
 
 **** icons
 https://github.com/manifestinteractive/weather-underground-icons
+my-weather-indicator
 
-*sc
+
