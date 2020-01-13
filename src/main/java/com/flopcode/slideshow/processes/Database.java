@@ -148,7 +148,11 @@ public class Database extends HandlerThread {
             if (images.size() == 0) {
                 return null;
             }
-            index = (index + 1) % images.size();
+            index++;
+            if (index == images.size()) {
+                index = 0;
+                Collections.shuffle(images);
+            }
             updateStatistics();
 
             return images.get(index);
