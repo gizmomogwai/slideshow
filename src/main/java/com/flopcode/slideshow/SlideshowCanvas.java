@@ -214,15 +214,23 @@ public class SlideshowCanvas extends Canvas {
         private static final int STEP_WIDTH = 48;
 
         public static void render(Graphics2D g, int offset, com.flopcode.slideshow.ui.Font smallFont, LocalDate now, PublicHolidays publicHolidays) {
-            LocalDate current = LocalDate.of(now.getYear(), now.getMonth(), 1);
-            int i = 1;
+            LocalDate current = now;
+            int nrOfDays = 31;
             ColorScheme colorScheme = new ColorScheme(Color.white, Color.red, new Color(0x71A95A));
-            while (current.getMonthValue() == now.getMonthValue()) {
+            int i = 1;
+            while (nrOfDays > 0) {
+                nrOfDays--;
                 Color color = publicHolidays.isPublicHoliday(current) ? colorScheme.publicHoliday :
                         (current.getDayOfWeek() == SUNDAY || current.getDayOfWeek() == SATURDAY) ? colorScheme.sunday : colorScheme.normal;
                 boolean renderingCurrentDay = current.equals(now);
                 centerDay(g, current, offset, i++, smallFont, renderingCurrentDay, color);
-                current = current.plusDays(1);
+                LocalDate next = current.plusDays(1);
+                if (current.getMonth() != next.getMonth()) {
+                    g.setColor(Color.WHITE);
+                    int x = (int) (offset + (i-0.5)*STEP_WIDTH)+4;
+                    g.drawLine(x, FIRST_LINE_Y-smallFont.metrics.getAscent()+5, x, SECOND_LINE_Y+5);
+                }
+                current = next;
             }
         }
 
