@@ -8,12 +8,9 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -33,11 +30,29 @@ public class Weather extends Thread {
     private static final String APP_ID = "9d8617eb77cba019774d79121d412a0e";
     private final Whiteboard whiteboard;
     private final Logger logger;
+    private final MinMax minMax = new MinMax();
 
     public Weather(Logger logger, Whiteboard whiteboard) {
         this.logger = logger;
         this.whiteboard = whiteboard;
         start();
+    }
+
+    private static class MinMax {
+        LocalDateTime today = LocalDateTime.now();
+        float min = Float.MAX_VALUE;
+        float max = Float.MIN_VALUE;
+
+        public void update(WeatherInfo info) {
+            if (!info.current.timestamp.toLocalDate().equals(today.toLocalDate())) {
+                // new day new luck, new min, new max
+                today = info.current.timestamp;
+                min = Float.MAX_VALUE;
+                max = Float.MIN_VALUE;
+            }
+            min = Math.min(info.dailies.get(0).temperatureForecast.min, min);
+            max = Math.max(info.dailies.get(0).temperatureForecast.max, max);
+        }
     }
 
     private static ZonedDateTime parseDateTime(String s) {
@@ -63,8 +78,12 @@ public class Weather extends Thread {
     private void updateWeather() throws Exception {
         // Carola-Neher-Str 10, 48.0878521,11.5414829
         String requestUrl =
-                format("https://api.openweathermap.org/data/2.5/onecall?lat=48.0878521&lon=11.5414829&appid=%s&units=metric", APP_ID);
-        whiteboard.set("weatherInfo", get(requestUrl));
+                format("https://api.openweathermap.org/data/2.5/onecall?lat=48.0878521&lon=11.5414829&units=metric&appid=%s",
+                        APP_ID);
+        WeatherInfo forecastWeatherInfo = get(requestUrl, WeatherInfo.class);
+        minMax.update(forecastWeatherInfo);
+
+        whiteboard.set("weatherInfo", forecastWeatherInfo);
     }
 
     public static class UnixUTCTimestampAdapter extends TypeAdapter<LocalDateTime> {
@@ -90,14 +109,14 @@ public class Weather extends Thread {
         }
     }
 
-    private WeatherInfo get(String s) throws IOException, ParserConfigurationException, SAXException {
+    private <T> T get(String s, Class<T> clazz) throws IOException, ParserConfigurationException, SAXException {
         URL url = new URL(s);
         logger.d("Weather.getDocument - " + url);
         URLConnection connection = url.openConnection();
         connection.setRequestProperty("User-Agent", "slideshow");
         connection.connect();
 
-        WeatherInfo weatherInfo = new GsonBuilder()
+        T result = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class, new UnixUTCTimestampAdapter())
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .create()
@@ -105,11 +124,13 @@ public class Weather extends Thread {
                         new InputStreamReader(
                                 connection.getInputStream(),
                                 "UTF-8"),
-                        WeatherInfo.class);
-        return weatherInfo;
+                        clazz);
+        return result;
     }
 
     public static class Current {
+        @SerializedName("dt")
+        LocalDateTime timestamp;
         @SerializedName("temp")
         public float temperature;
         public float windSpeed;
@@ -117,34 +138,10 @@ public class Weather extends Thread {
     }
 
     public static class WeatherInfo {
-        @SerializedName("current")
         public Current current;
         @SerializedName("daily")
         public List<Forecast> dailies;
         public List<WeatherDescription> weather;
-    }
-
-    public static class Temperature {
-        private static final XPath xpath;
-
-        static {
-            XPathFactory xPathfactory = XPathFactory.newInstance();
-            xpath = xPathfactory.newXPath();
-        }
-
-        public final int current;
-        public final int min;
-        public final int max;
-
-        Temperature(Document d) throws Exception {
-            this(Math.round(Float.parseFloat(xpath.compile("current/temperature/@value").evaluate(d))), Math.round(Float.parseFloat(xpath.compile("current/temperature/@min").evaluate(d))), Math.round(Float.parseFloat(xpath.compile("current/temperature/@max").evaluate(d))));
-        }
-
-        Temperature(int current, int min, int max) {
-            this.current = current;
-            this.min = min;
-            this.max = max;
-        }
     }
 
     public static class TemperatureForecast {
