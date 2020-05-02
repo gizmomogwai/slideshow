@@ -9,6 +9,7 @@ import com.flopcode.slideshow.processes.Database;
 import com.flopcode.slideshow.processes.FileScanner;
 import com.flopcode.slideshow.processes.MotionDetector;
 import com.flopcode.slideshow.processes.Weather;
+import mindroid.os.Looper;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -45,11 +46,12 @@ public class Main {
         
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         logger.i("screenSize = " + screenSize);
-        // screenSize.width /= 2;
-        // screenSize.height /= 2;
+        //screenSize.width /= 2;
+        //screenSize.height /= 2;
 
         Database db = new Database(logger, clock, whiteboard);
         FileScanner scanner = new FileScanner(logger, db.fileReceiver, args);
+        Looper.prepare();
         Slideshow slideshow = new Slideshow(logger, clock, db.imageRequest, whiteboard, screenSize);
         MotionDetector motionDetector = new MotionDetector(logger, slideshow.pause, slideshow.resume);
         Weather weather = new Weather(logger, whiteboard);

@@ -9,6 +9,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
+import java.util.function.Consumer;
 
 public class Gfx {
     final Graphics2D graphics;
@@ -18,6 +19,15 @@ public class Gfx {
         this.graphics.setClip(x, y, width, height);
     }
 
+    public void tmp(Consumer<Gfx> r) {
+        Rectangle2D bounds2D = this.graphics.getClip().getBounds2D();
+        Gfx g = new Gfx(this.graphics, (int)bounds2D.getX(), (int)bounds2D.getY(), (int)bounds2D.getWidth(), (int)bounds2D.getHeight());
+        try {
+            r.accept(g);
+        } finally {
+            g.dispose();
+        }
+    }
     public void setColor(Color color) {
         graphics.setColor(color);
     }

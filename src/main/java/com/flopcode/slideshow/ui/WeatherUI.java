@@ -7,12 +7,13 @@ import com.flopcode.slideshow.data.weather.WeatherIcons;
 import com.flopcode.slideshow.logger.Logger;
 import com.flopcode.slideshow.processes.Weather;
 
+import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.awt.Color.WHITE;
 
@@ -20,15 +21,12 @@ public class WeatherUI implements UI {
 
     public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    private final ForecastUI today;
     private final ForecastUI tomorrow;
     private final ForecastUI dayAfterTomorrow;
     private final SunriseSunsetUI sunriseSunset;
     private final CurrentConditionUI currentCondition;
     private final SlideshowCanvas.Fonts fonts;
     // private final ForecastGraphUI forecastGraph;
-
-    private WeatherExtract weatherExtract;
 
     public WeatherUI(Logger logger, Clock clock, WhiteboardForHandler whiteboard, SlideshowCanvas.Fonts fonts) throws Exception {
         this.fonts = fonts;
@@ -37,12 +35,8 @@ public class WeatherUI implements UI {
         sunriseSunset = new SunriseSunsetUI(whiteboard, icons);
         currentCondition = new CurrentConditionUI(whiteboard, icons);
 
-        weatherExtract = new WeatherExtract(clock, whiteboard);
-        today = new ForecastUI(icons, () -> weatherExtract.getToday());
-        tomorrow = new ForecastUI(icons, () -> weatherExtract.getTomorrow());
-        dayAfterTomorrow = new ForecastUI(icons, () -> weatherExtract.getDayAfterTomorrow());
-
-        // forecastGraph = new ForecastGraphUI(() -> weatherExtract.all);
+        tomorrow = new ForecastUI(whiteboard, icons, (v) -> v != null ? v.dailies.get(1): null);
+        dayAfterTomorrow = new ForecastUI(whiteboard, icons, (v) -> v != null ? v.dailies.get(2) : null);
     }
 
     @Override
@@ -54,29 +48,20 @@ public class WeatherUI implements UI {
 
         gfx.render(currentCondition, 0, 110);
 
-        gfx.render(today, 0, gfx.fromTop(310));
-        gfx.render(tomorrow, 0, gfx.fromTop(375));
-        gfx.render(dayAfterTomorrow, 0, gfx.fromTop(440));
+        //       gfx.render(today, 0, gfx.fromTop(310));
+        gfx.tmp((gfx2) -> {
+                    gfx2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+                    gfx2.render(tomorrow, 0, gfx.fromTop(310));
+                    gfx2.render(dayAfterTomorrow, 0, gfx.fromTop(510));
+                });
         //gfx.render(forecastGraph, 0, gfx.fromTop(600));
     }
-
-    public static class Forecast_8_12_16 {
-        Weather.Forecast _8;
-        Weather.Forecast _12;
-        Weather.Forecast _16;
-
-        Forecast_8_12_16(List<Weather.Forecast> forecasts) {
-            forecasts.stream().min(new HourComparator(8)).ifPresent(f -> _8 = f);
-            forecasts.stream().min(new HourComparator(12)).ifPresent(f -> _12 = f);
-            forecasts.stream().min(new HourComparator(16)).ifPresent(f -> _16 = f);
-        }
-    }
-
+/*
     private static class WeatherExtract {
         private final Clock clock;
-        Forecast_8_12_16 today;
-        Forecast_8_12_16 tomorrow;
-        Forecast_8_12_16 dayAfterTomorrow;
+        Forecast today;
+        Forecast tomorrow;
+        Forecast dayAfterTomorrow;
         List<Weather.Forecast> all;
 
         WeatherExtract(Clock clock, WhiteboardForHandler whiteboard) {
@@ -89,29 +74,18 @@ public class WeatherUI implements UI {
                 return;
             }
             LocalDate now = clock.date();
-            all = weatherInfo.forecasts.forecasts;
-            today = new Forecast_8_12_16(getForecasts(weatherInfo, now));
-            tomorrow = new Forecast_8_12_16(getForecasts(weatherInfo, now.plusDays(1)));
-            dayAfterTomorrow = new Forecast_8_12_16(getForecasts(weatherInfo, now.plusDays(2)));
+            today = new Forecast(weatherInfo.dailies.get(0));
+            tomorrow = new Forecast(weatherInfo.dailies.get(1));
+            dayAfterTomorrow = new Forecast(weatherInfo.dailies.get(2));
         }
 
-        private List<Weather.Forecast> getForecasts(Weather.WeatherInfo weatherInfo, LocalDate date) {
-            return weatherInfo.forecasts.forecasts.stream().filter(fc -> fc.time.toLocalDate().equals(date)).collect(Collectors.toList());
+        private List<Weather.Forecast> getForecasts(Weather.WeatherInfo weatherInfo, LocalDate now) {
+            // FIXME NOW HERE
+            return Collections.emptyList();
         }
 
-        public Forecast_8_12_16 getDayAfterTomorrow() {
-            return dayAfterTomorrow;
-        }
-
-        public Forecast_8_12_16 getTomorrow() {
-            return tomorrow;
-        }
-
-        public Forecast_8_12_16 getToday() {
-            return today;
-        }
     }
-
+/*
     static class HourComparator implements Comparator<Weather.Forecast> {
         private final int hour;
 
@@ -135,4 +109,6 @@ public class WeatherUI implements UI {
         }
 
     }
+
+ */
 }

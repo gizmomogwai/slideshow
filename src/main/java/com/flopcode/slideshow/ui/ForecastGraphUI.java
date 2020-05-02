@@ -29,6 +29,7 @@ public class ForecastGraphUI implements UI {
 
     @Override
     public void render(Gfx gfx, Graphics2D g) throws Exception {
+        /* FIXME WEATHERAPI
         List<Weather.Forecast> forecasts = forecastSupplier.get();
         if (forecasts.size() == 0) {
             return;
@@ -62,7 +63,9 @@ public class ForecastGraphUI implements UI {
                     (int) dx * (temperatures.size() - 1), HEIGHT - mapTo(temperatures.get(temperatures.size() - 1), minMax, HEIGHT),
                     (int) dx * (temperatures.size() - 1), HEIGHT - mapTo(temperatures.get(temperatures.size() - 1), minMax, HEIGHT)
             );
+
         }
+        */
     }
 
     private int mapTo(int from, IntSummaryStatistics minMax, int width) {

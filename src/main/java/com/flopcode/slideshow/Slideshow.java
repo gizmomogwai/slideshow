@@ -13,8 +13,8 @@ import java.time.Duration;
 
 class Slideshow extends HandlerThread {
 
-    //private static final Duration NEXT_IMAGE = Duration.ofSeconds(5);
-    private static final Duration NEXT_IMAGE = Duration.ofMinutes(1);
+    private static final Duration NEXT_IMAGE = Duration.ofSeconds(5);
+    // private static final Duration NEXT_IMAGE = Duration.ofMinutes(1);
     final Handler pause;
     final Handler resume;
     private final Handler database;
@@ -49,6 +49,7 @@ class Slideshow extends HandlerThread {
                 nextStep.sendMessageDelayed(new Message(), NEXT_IMAGE.toMillis());
             }
         };
+
         nextStep = new Handler(getLooper()) {
             @Override
             public void handleMessage(Message msg) {

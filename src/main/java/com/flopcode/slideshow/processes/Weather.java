@@ -2,38 +2,31 @@ package com.flopcode.slideshow.processes;
 
 import com.flopcode.slideshow.Whiteboard;
 import com.flopcode.slideshow.logger.Logger;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Double.parseDouble;
 import static java.lang.String.format;
-import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 public class Weather extends Thread {
 
@@ -60,7 +53,7 @@ public class Weather extends Thread {
                 e.printStackTrace();
             }
             try {
-                sleep(ofMinutes(1).toMillis());
+                sleep(ofSeconds(15).toMillis());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -68,58 +61,67 @@ public class Weather extends Thread {
     }
 
     private void updateWeather() throws Exception {
-        Document forecast = getDocument("http://api.openweathermap.org/data/2.5/forecast?q=Munich,de&appid=" + APP_ID + "&mode=xml&units=metric");
-        // prettyPrint(forecast);
-
-        Document current = getDocument("http://api.openweathermap.org/data/2.5/weather?q=Munich,de&appid=" + APP_ID + "&mode=xml&units=metric");
-        // prettyPrint(current);
-
-        WeatherInfo weatherInfo = new WeatherInfo(current, forecast);
-
-        whiteboard.set("weatherInfo", weatherInfo);
+        // Carola-Neher-Str 10, 48.0878521,11.5414829
+        String requestUrl =
+                format("https://api.openweathermap.org/data/2.5/onecall?lat=48.0878521&lon=11.5414829&appid=%s&units=metric", APP_ID);
+        whiteboard.set("weatherInfo", get(requestUrl));
     }
 
-    private Document getDocument(String s) throws IOException, ParserConfigurationException, SAXException {
-        //HashCode h = Hashing.sha256().hashBytes(s.getBytes());
-        //  String pathName = h.toString();
-        //  File cacheFile = new File(pathName);
-        InputStream in = null;
-        //    if (!cacheFile.exists()) {
+    public static class UnixUTCTimestampAdapter extends TypeAdapter<LocalDateTime> {
+        @Override
+        public void write(JsonWriter out, LocalDateTime value) throws IOException {
+            if (value == null) {
+                out.nullValue();
+            } else {
+                out.value(value.atZone(ZoneId.systemDefault()).toEpochSecond());
+            }
+        }
+
+        @Override
+        public LocalDateTime read(JsonReader in) throws IOException {
+            if (in != null) {
+                long epochMilli = in.nextLong();
+                Instant instant = Instant.ofEpochMilli(epochMilli * 1000);
+                LocalDateTime local = instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
+                return local;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    private WeatherInfo get(String s) throws IOException, ParserConfigurationException, SAXException {
         URL url = new URL(s);
         logger.d("Weather.getDocument - " + url);
         URLConnection connection = url.openConnection();
         connection.setRequestProperty("User-Agent", "slideshow");
         connection.connect();
-        in = connection.getInputStream();
-//            ByteStreams.copy(connection.getInputStream(), new FileOutputStream(cacheFile));
-        //}
-        //      in = new FileInputStream(cacheFile);
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        return documentBuilder.parse(in);
+
+        WeatherInfo weatherInfo = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new UnixUTCTimestampAdapter())
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create()
+                .fromJson(
+                        new InputStreamReader(
+                                connection.getInputStream(),
+                                "UTF-8"),
+                        WeatherInfo.class);
+        return weatherInfo;
     }
 
-    private void prettyPrint(Document document) throws Exception {
-        Transformer tf = TransformerFactory.newInstance().newTransformer();
-        tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        tf.setOutputProperty(OutputKeys.INDENT, "yes");
-        Writer out = new StringWriter();
-        tf.transform(new DOMSource(document), new StreamResult(out));
-        logger.d(out.toString());
+    public static class Current {
+        @SerializedName("temp")
+        public float temperature;
+        public float windSpeed;
+        public List<WeatherDescription> weather;
     }
 
     public static class WeatherInfo {
-        public final Temperature temperature;
-        public final Forecasts forecasts;
-        public final Sun sun;
-        public final Condition condition;
-
-        WeatherInfo(Document current, Document forecast) throws Exception {
-            this.sun = new Sun(current);
-            this.temperature = new Temperature(current);
-            this.forecasts = new Forecasts(forecast);
-            this.condition = new Condition(current);
-        }
+        @SerializedName("current")
+        public Current current;
+        @SerializedName("daily")
+        public List<Forecast> dailies;
+        public List<WeatherDescription> weather;
     }
 
     public static class Temperature {
@@ -145,82 +147,23 @@ public class Weather extends Thread {
         }
     }
 
-    public static class Sun {
-        private static final XPathExpression riseQuery;
-        private static final XPathExpression setQuery;
-
-        static {
-            XPathFactory xPathfactory = XPathFactory.newInstance();
-            XPath xpath = xPathfactory.newXPath();
-            try {
-                riseQuery = xpath.compile("current/city/sun/@rise");
-                setQuery = xpath.compile("current/city/sun/@set");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        public ZonedDateTime rise;
-        public ZonedDateTime set;
-
-        Sun(Document d) throws Exception {
-            rise = parseDateTime(riseQuery.evaluate(d));
-            set = parseDateTime(setQuery.evaluate(d));
-        }
-
-    }
-
-    public static class Condition {
-        private static final XPathExpression currentXPath;
-        private static final XPathExpression windXPath;
-
-        static {
-            XPathFactory xPathfactory = XPathFactory.newInstance();
-            XPath xpath = xPathfactory.newXPath();
-            try {
-                currentXPath = xpath.compile("current/weather/@value");
-                windXPath = xpath.compile("current/wind/speed/@value");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        public final String current;
-        public final String wind;
-
-        Condition(Document d) throws Exception {
-            this.current = currentXPath.evaluate(d);
-            this.wind = format("%.1f", parseDouble(windXPath.evaluate(d)) * 3.6) + " km/h";
-        }
+    public static class TemperatureForecast {
+        public float min;
+        public float max;
     }
 
     public static class Forecast {
-        public final String symbol;
-        public final ZonedDateTime time;
-        public final int temperature;
-
-        Forecast(ZonedDateTime time, String symbol, int temperature) {
-            this.time = time;
-            this.symbol = symbol;
-            this.temperature = temperature;
-        }
+        public LocalDateTime sunrise;
+        public LocalDateTime sunset;
+        @SerializedName("temp")
+        public TemperatureForecast temperatureForecast;
+        public float windSpeed;
+        public List<WeatherDescription> weather;
     }
 
-    public static class Forecasts {
-        public final List<Forecast> forecasts;
-
-        Forecasts(Document d) throws Exception {
-            XPathFactory xPathfactory = XPathFactory.newInstance();
-            XPath xpath = xPathfactory.newXPath();
-            NodeList forecastNodes = (NodeList) xpath.compile("weatherdata/forecast/time").evaluate(d, XPathConstants.NODESET);
-            XPathExpression temperature = xpath.compile("temperature/@value");
-            XPathExpression symbol = xpath.compile("symbol/@name");
-            forecasts = new ArrayList<>();
-            for (int i = 0; i < forecastNodes.getLength(); ++i) {
-                Node forecast = forecastNodes.item(i);
-                ZonedDateTime date = parseDateTime(forecast.getAttributes().getNamedItem("from").getTextContent());
-                forecasts.add(new Forecast(date, symbol.evaluate(forecast), Math.round(Float.parseFloat(temperature.evaluate(forecast)))));
-            }
-        }
+    public static class WeatherDescription {
+        public String description;
+        String icon;
+        int id;
     }
 }

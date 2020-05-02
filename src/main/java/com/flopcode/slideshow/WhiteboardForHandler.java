@@ -20,7 +20,7 @@ public class WhiteboardForHandler {
 
             @Override
             public Handler getHandler() {
-                return handler;
+                return WhiteboardForHandler.this.handler;
             }
         });
         return this;

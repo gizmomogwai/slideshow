@@ -64,14 +64,12 @@ https://www.schemecolor.com/watermelon.php
 https://www.schemecolor.com/avocado.php
 
 *** Weather
-http://api.openweathermap.org/data/2.5/weather?q=Munich,de&appid=d1bff471b620087b73198d7450f2effd&mode=xml&units=metric
-http://api.openweathermap.org/data/2.5/forecast?q=Munich,de&appid=d1bff471b620087b73198d7450f2effd&mode=xml&units=metric
+New onecall api, has everything, windspeed, uvindex, ...
+Example: http "https://api.openweathermap.org/data/2.5/onecall?lat=48.0878521&lon=11.5414829&appid=9d8617eb77cba019774d79121d412a0e&units=metric"
 
-https://openweathermap.org/weather-conditions
+BUT it does not have proper min/max values for the current day, only for the rest of the starting from the current time.
+Fortunately historical data is available (https://openweathermap.org/api/one-call-api#history)
 
-https://stackoverflow.com/questions/12487125/java-how-do-you-convert-a-utc-timestamp-to-local-clock
-
-should i pick 8 14 17?
 
 **** icons
 https://github.com/manifestinteractive/weather-underground-icons
