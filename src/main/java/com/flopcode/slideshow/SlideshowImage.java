@@ -57,7 +57,7 @@ class SlideshowImage {
     private final Font font;
     private final GeoLocationCache geoLocationCache;
     private final String title;
-    private Logger logger;
+    private final Logger logger;
 
 
     SlideshowImage(Logger logger, Clock clock, DatabaseImage databaseImage, Image image, Font font, GeoLocationCache geoLocationCache) {

@@ -1,5 +1,6 @@
 package com.flopcode.slideshow.processes;
 
+import com.flopcode.slideshow.Constants;
 import com.flopcode.slideshow.Whiteboard;
 import com.flopcode.slideshow.logger.Logger;
 import com.google.gson.FieldNamingPolicy;
@@ -17,13 +18,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.List;
 
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 
 public class Weather extends Thread {
 
@@ -55,11 +53,6 @@ public class Weather extends Thread {
         }
     }
 
-    private static ZonedDateTime parseDateTime(String s) {
-        OffsetDateTime dateTime = OffsetDateTime.parse(s + "Z");
-        return dateTime.atZoneSameInstant(ZoneId.systemDefault());
-    }
-
     public void run() {
         while (true) {
             try {
@@ -68,7 +61,7 @@ public class Weather extends Thread {
                 e.printStackTrace();
             }
             try {
-                sleep(ofSeconds(15).toMillis());
+                sleep(Constants.WEATHER_POLL_CYCLE.toMillis());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

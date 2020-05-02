@@ -11,10 +11,12 @@ import mindroid.os.Message;
 import java.awt.Dimension;
 import java.time.Duration;
 
+import static com.flopcode.slideshow.Constants.SLIDESHOW_NEXT_IMAGE;
+
 class Slideshow extends HandlerThread {
 
-    private static final Duration NEXT_IMAGE = Duration.ofSeconds(5);
-    // private static final Duration NEXT_IMAGE = Duration.ofMinutes(1);
+    // private static final Duration NEXT_IMAGE = Duration.ofSeconds(5);
+    private static final Duration NEXT_IMAGE = SLIDESHOW_NEXT_IMAGE;
     final Handler pause;
     final Handler resume;
     private final Handler database;

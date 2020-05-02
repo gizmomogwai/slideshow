@@ -1,7 +1,7 @@
 package com.flopcode.slideshow.ui;
 
-import com.flopcode.slideshow.clock.Clock;
 import com.flopcode.slideshow.SlideshowCanvas;
+import com.flopcode.slideshow.clock.Clock;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;

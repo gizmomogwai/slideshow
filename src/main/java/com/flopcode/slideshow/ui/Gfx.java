@@ -21,13 +21,14 @@ public class Gfx {
 
     public void tmp(Consumer<Gfx> r) {
         Rectangle2D bounds2D = this.graphics.getClip().getBounds2D();
-        Gfx g = new Gfx(this.graphics, (int)bounds2D.getX(), (int)bounds2D.getY(), (int)bounds2D.getWidth(), (int)bounds2D.getHeight());
+        Gfx g = new Gfx(this.graphics, (int) bounds2D.getX(), (int) bounds2D.getY(), (int) bounds2D.getWidth(), (int) bounds2D.getHeight());
         try {
             r.accept(g);
         } finally {
             g.dispose();
         }
     }
+
     public void setColor(Color color) {
         graphics.setColor(color);
     }

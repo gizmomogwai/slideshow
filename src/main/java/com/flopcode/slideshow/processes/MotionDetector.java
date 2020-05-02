@@ -1,5 +1,6 @@
 package com.flopcode.slideshow.processes;
 
+import com.flopcode.slideshow.Constants;
 import com.flopcode.slideshow.logger.Logger;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
@@ -12,10 +13,9 @@ import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
 import mindroid.os.Message;
 
-import java.time.Duration;
-
 /**
  * Triggers on/off every 50s depending on the last motion detector event.
+ * TODO: document
  */
 public class MotionDetector extends HandlerThread {
 
@@ -45,7 +45,7 @@ public class MotionDetector extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                sendMessageDelayed(new Message().setWhat(msg.what), Duration.ofSeconds(50));
+                sendMessageDelayed(new Message().setWhat(msg.what), Constants.REFRESH_DISPLAY);
                 msg.recycle();
             }
 
@@ -67,7 +67,6 @@ public class MotionDetector extends HandlerThread {
                 handleState(event.getState());
             });
             handleState(motion.getState());
-
         } catch (Throwable t) {
             t.printStackTrace();
             logger.e("Cannot initialize gpios");

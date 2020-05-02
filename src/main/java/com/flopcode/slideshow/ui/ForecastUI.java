@@ -41,7 +41,7 @@ class ForecastUI implements UI {
             s = "" + forecast.weather.get(0).description;
             gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 2 * LINE_DISTANCE);
 
-            // windspeed
+            // wind speed
             s = String.format("%d km/h", Math.round((forecast.windSpeed * 3600) / 1000));
             gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 3 * LINE_DISTANCE);
         }

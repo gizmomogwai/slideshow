@@ -5,15 +5,10 @@ import com.flopcode.slideshow.WhiteboardForHandler;
 import com.flopcode.slideshow.clock.Clock;
 import com.flopcode.slideshow.data.weather.WeatherIcons;
 import com.flopcode.slideshow.logger.Logger;
-import com.flopcode.slideshow.processes.Weather;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 import static java.awt.Color.WHITE;
 
@@ -35,7 +30,7 @@ public class WeatherUI implements UI {
         sunriseSunset = new SunriseSunsetUI(whiteboard, icons);
         currentCondition = new CurrentConditionUI(whiteboard, icons);
 
-        tomorrow = new ForecastUI(whiteboard, icons, (v) -> v != null ? v.dailies.get(1): null);
+        tomorrow = new ForecastUI(whiteboard, icons, (v) -> v != null ? v.dailies.get(1) : null);
         dayAfterTomorrow = new ForecastUI(whiteboard, icons, (v) -> v != null ? v.dailies.get(2) : null);
     }
 
@@ -50,10 +45,10 @@ public class WeatherUI implements UI {
 
         //       gfx.render(today, 0, gfx.fromTop(310));
         gfx.tmp((gfx2) -> {
-                    gfx2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
-                    gfx2.render(tomorrow, 0, gfx.fromTop(310));
-                    gfx2.render(dayAfterTomorrow, 0, gfx.fromTop(510));
-                });
+            gfx2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+            gfx2.render(tomorrow, 0, gfx.fromTop(310));
+            gfx2.render(dayAfterTomorrow, 0, gfx.fromTop(510));
+        });
         //gfx.render(forecastGraph, 0, gfx.fromTop(600));
     }
 /*

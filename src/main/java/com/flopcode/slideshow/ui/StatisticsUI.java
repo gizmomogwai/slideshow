@@ -8,13 +8,11 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 
 public class StatisticsUI implements UI {
-    private final Dimension screenSize;
     private final SlideshowCanvas.Fonts fonts;
     private final WhiteboardForHandler whiteboard;
     Database.Statistics statistics;
 
     public StatisticsUI(WhiteboardForHandler whiteboard, Dimension screenSize, SlideshowCanvas.Fonts fonts) {
-        this.screenSize = screenSize;
         this.fonts = fonts;
         whiteboard.add("databaseStatistics", (key, value) -> statistics = (Database.Statistics) value);
         this.whiteboard = whiteboard;

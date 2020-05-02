@@ -10,7 +10,7 @@ import java.util.HashMap;
 public class GeoLocationCache {
 
     private HashMap<URL, String> map = new HashMap<>();
-    private String CACHE_FILENAME = "geolocation.cache";
+    private final String CACHE_FILENAME = "geolocation.cache";
     private int requestedElements = 0;
 
     GeoLocationCache() {

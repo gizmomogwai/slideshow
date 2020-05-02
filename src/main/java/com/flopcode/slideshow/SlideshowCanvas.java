@@ -45,7 +45,7 @@ public class SlideshowCanvas extends Canvas {
     private final GeoLocationCache geoLocationCache;
     private final Dimension screenSize;
     private final OnTopUI onTop;
-    private Fonts fonts;
+    private final Fonts fonts;
     private BufferStrategy buffers;
     private SlideshowImage current;
 
@@ -227,8 +227,8 @@ public class SlideshowCanvas extends Canvas {
                 LocalDate next = current.plusDays(1);
                 if (current.getMonth() != next.getMonth()) {
                     g.setColor(Color.WHITE);
-                    int x = (int) (offset + (i-0.5)*STEP_WIDTH)+4;
-                    g.drawLine(x, FIRST_LINE_Y-smallFont.metrics.getAscent()+5, x, SECOND_LINE_Y+5);
+                    int x = (int) (offset + (i - 0.5) * STEP_WIDTH) + 4;
+                    g.drawLine(x, FIRST_LINE_Y - smallFont.metrics.getAscent() + 5, x, SECOND_LINE_Y + 5);
                 }
                 current = next;
             }
