@@ -23,10 +23,8 @@ public class OnTopUI implements UI {
     @Override
     public void render(Gfx gfx, Graphics2D g) throws Exception {
         gfx.render(calendarUi, 0, 0);
-
-        gfx.render(moonUi, gfx.fromRight(80), gfx.fromTop(200));
+        gfx.render(moonUi, gfx.fromRight(80), gfx.fromTop(180));
         gfx.render(weatherUi, 0, 270);
-
         gfx.render(statisticsUi, gfx.fromRight(10), gfx.fromBottom(10));
     }
 }

@@ -3,6 +3,7 @@ package com.flopcode.slideshow.ui;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
@@ -21,7 +22,7 @@ public class Gfx {
 
     public void tmp(Consumer<Gfx> r) {
         Rectangle2D bounds2D = this.graphics.getClip().getBounds2D();
-        Gfx g = new Gfx(this.graphics, (int) bounds2D.getX(), (int) bounds2D.getY(), (int) bounds2D.getWidth(), (int) bounds2D.getHeight());
+        Gfx g = new Gfx((Graphics2D) graphics.create(), (int) bounds2D.getX(), (int) bounds2D.getY(), (int) bounds2D.getWidth(), (int) bounds2D.getHeight());
         try {
             r.accept(g);
         } finally {

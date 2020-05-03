@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
+import static com.google.common.primitives.Floats.max;
+import static com.google.common.primitives.Floats.min;
 import static java.lang.String.format;
 
 public class Weather extends Thread {
@@ -48,8 +50,12 @@ public class Weather extends Thread {
                 min = Float.MAX_VALUE;
                 max = Float.MIN_VALUE;
             }
-            min = Math.min(info.dailies.get(0).temperatureForecast.min, min);
-            max = Math.max(info.dailies.get(0).temperatureForecast.max, max);
+
+            min = min(info.dailies.get(0).temperatureForecast.min, info.current.temperature, min);
+            max = max(info.dailies.get(0).temperatureForecast.max, info.current.temperature, max);
+
+            info.dailies.get(0).temperatureForecast.min = min;
+            info.dailies.get(0).temperatureForecast.max = max;
         }
     }
 
@@ -118,6 +124,8 @@ public class Weather extends Thread {
                                 connection.getInputStream(),
                                 "UTF-8"),
                         clazz);
+
+        logger.i("Got weatherInfo: " + new GsonBuilder().setPrettyPrinting().create().toJson(result));
         return result;
     }
 

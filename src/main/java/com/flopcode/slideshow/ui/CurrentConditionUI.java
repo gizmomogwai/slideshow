@@ -22,7 +22,8 @@ class CurrentConditionUI implements UI {
     public void render(Gfx gfx, Graphics2D g) throws Exception {
         if (weatherInfo != null) {
             // icon
-            Image now = icons.get(weatherInfo.dailies.get(0).weather.get(0).description);
+            String weatherDescriptionToday = weatherInfo.dailies.get(0).weather.get(0).description;
+            Image now = icons.get(weatherDescriptionToday);
             gfx.drawImage(now, gfx.fromRight(80 + now.getWidth(null)), 0);
 
             // current temperature
@@ -40,10 +41,10 @@ class CurrentConditionUI implements UI {
             gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + LINE_DISTANCE);
 
             // weather description (e.g. rainy)
-            s = "" + weatherInfo.current.weather.get(0).description;
+            s = weatherDescriptionToday;
             gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 2 * LINE_DISTANCE);
 
-            // windspeed
+            // wind-speed
             s = String.format("%d km/h", Math.round((weatherInfo.current.windSpeed * 3600) / 1000));
             gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 3 * LINE_DISTANCE);
         }
