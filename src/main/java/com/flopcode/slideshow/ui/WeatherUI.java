@@ -44,9 +44,9 @@ public class WeatherUI implements UI {
         gfx.render(currentCondition, 0, 110);
 
         gfx.tmp((gfx2) -> {
-            gfx2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+            gfx2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.6f));
             gfx2.render(tomorrow, 0, gfx.fromTop(310));
-            gfx2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
+            gfx2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.6f));
             gfx2.render(dayAfterTomorrow, 0, gfx.fromTop(510));
         });
         //gfx.render(forecastGraph, 0, gfx.fromTop(600));
