@@ -68,6 +68,7 @@ public class Database extends HandlerThread {
     private void sendBackToRequestor() {
         if (requestor != null) {
             DatabaseImage nextImage = next();
+            System.out.println("Database.sendBackToRequestor() " + nextImage);
             if (nextImage != null) {
                 requestor.sendMessage(new Message().setData(new Bundle().putObject("image", nextImage)));
                 requestor = null;
@@ -110,7 +111,7 @@ public class Database extends HandlerThread {
         }
 
         private void updatePredicate() {
-            filter = (image) -> image.creationData.getMonth() == clock.date().getMonth();
+            filter = (image) -> true; // image.creationData.getMonth() == clock.date().getMonth();
         }
 
         private boolean add(List<DatabaseImage> allImages, DatabaseImage image) {

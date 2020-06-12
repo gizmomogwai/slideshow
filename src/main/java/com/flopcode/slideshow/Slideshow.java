@@ -21,7 +21,7 @@ class Slideshow extends HandlerThread {
     final Handler resume;
     private final Handler database;
     private final Handler imageAvailable;
-    private final Handler nextStep;
+    public final Handler nextStep;
     SlideshowCanvas canvas;
     private boolean paused = false;
 

@@ -9,11 +9,14 @@ import com.flopcode.slideshow.processes.FileScanner;
 import com.flopcode.slideshow.processes.MotionDetector;
 import com.flopcode.slideshow.processes.Weather;
 import mindroid.os.Looper;
+import mindroid.os.Message;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 import static com.flopcode.slideshow.logger.Logger.Level.INFO;
 
@@ -52,7 +55,7 @@ public class Main {
         Looper.prepare();
         Slideshow slideshow = new Slideshow(logger, clock, db.imageRequest, whiteboard, screenSize);
         MotionDetector motionDetector = new MotionDetector(logger, slideshow.pause, slideshow.resume);
-        Weather weather = new Weather(logger, whiteboard);
+//        Weather weather = new Weather(logger, whiteboard);
 
         slideshow.canvas.setPreferredSize(screenSize);
         slideshow.canvas.setSize(screenSize);
@@ -65,6 +68,26 @@ public class Main {
         all.setPreferredSize(screenSize);
         all.setLayout(null);
         all.add(slideshow.canvas);
+        all.setFocusable(true);
+        all.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                switch (e.getKeyChar()) {
+                    case 'd':
+                    slideshow.nextStep.sendMessage(new Message());
+                    break;
+                }
+                 /*   case KeyEvent.VK_LEFT:
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                    case KeyEvent.VK_D:
+                        slideshow.nextStep.sendMessage(new Message());
+                        break;
+                }
+                */
+            }
+        });
+        all.requestFocus();
 
         root.pack();
         root.setResizable(false);

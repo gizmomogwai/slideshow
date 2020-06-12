@@ -1,4 +1,6 @@
 # coding: utf-8
+require "English"
+
 SSH_TARGET = "pi@slideshow"
 
 TARGET_PATH = "/home/pi/Pictures/ImageLib"
@@ -29,16 +31,45 @@ end
 def server
   "qnappi"
 end
-
+require 'date'
+def reference
+  DateTime.new(2001, 01, 01)
+end
 class Image
-  attr_reader :path
-  def initialize(path, orientation)
+  attr_reader :path, :created, :added
+  def initialize(path, orientation, created, added)
     @path = path
     @orientation = orientation
+
+    @created = reference + created.to_i.seconds
+    @added = reference + added.to_i.seconds
   end
-  def normalize(base, tmp_file)
-    p = File.join(base, @path)
-    
+  def from_renders(photos_library)
+    ext = File.extname(@path)
+    pattern = "#{photos_library}/resources/renders/#{@path.gsub(ext, '')}*#{ext}"
+    rendered = Dir.glob(pattern)
+    p = if rendered.size > 1
+      raise "Dont know which rendered to take #{rendered.join(', ')}"
+    elsif rendered.size == 1
+      rendered.first
+    else
+      nil
+    end
+  end
+  def from_originals(photos_library)
+    File.join(photos_library, "originals", @path) 
+  end
+  def normalize(photos_library, tmp_file)
+    p = from_renders(photos_library) || from_originals(photos_library)
+
+    if File.extname(@path).downcase == ".heic"
+      converted = "#{tmp_file}-converted.jpg"
+      cmd = "convert \"#{p}\" \"#{converted}\""
+      res = system cmd
+      raise "Cannot run #{cmd}" unless res
+      p = converted
+    end
+
     command =
       case @orientation
       when "1"
@@ -52,25 +83,36 @@ class Image
       else
         raise "Cannot handle #{@orientation} for #{p}"
       end
-    puts(command)
     res = system(command)
-    if res == false
-      raise "Cannot execute command"
-    end
+    raise "Cannot execute #{command}" unless res
+    
     tmp_file
   end
+
   JPG_PATTERN = Regexp.new(".*(jpg|jpeg|png)", Regexp::IGNORECASE)
-  def jpg?
-    JPG_PATTERN.match(@path)
+  HEIC_PATTERN = Regexp.new(".*heic", Regexp::IGNORECASE)
+  def supported_format?
+    JPG_PATTERN.match(@path) || 
+    HEIC_PATTERN.match(@path)
   end
-end
+  def to_s
+    "Image #{@path} #{@created} #{@added} #{@orientation}"
+  end
+  def path_on_server
+    "%04d/%02d/%04d-%02d-%02d/%s" % [@created.year, @created.month, @created.year, @created.month, @created.day, 
+      @path
+        .gsub("/", "")
+        .gsub(" ", "")
+        .gsub(".heic", ".jpg")]
+  end
+end # class Image
 
 
 def parse(lines)
   lines
     .split("\n")
     .map{ |line| line.split("|") }
-    .map{ |path, orientation| Image.new(path, orientation) }
+    .map{ |path, filename, orientation, created, added| Image.new(File.join(path, filename), orientation, created, added) }
 end
 
 require 'yaml'
@@ -88,50 +130,56 @@ def save_done(done)
   end
 end
 
+class Numeric
+  def minutes; self/1440.0 end
+  alias :minute :minutes
+
+  def seconds; self/86400.0 end
+  alias :second :seconds
+end
+
 desc "Copy images to slideshow server"
 task :copy_images_to_slideshow do
   home = ENV["HOME"]
+  database_file = "Photos.sqlite"
   photos_lib = "#{home}/Pictures/Photos Library.photoslibrary"
-  sh "cp \"#{photos_lib}/database/photos.db\" #{home}/tmp/"
+  sh "cp \"#{photos_lib}/database/#{database_file}\" #{home}/tmp/"
   puts "copy done"
-  command = "sqlite3 #{home}/tmp/photos.db \"select imagePath,RKVersion.orientation,RKVersion.isFavorite from RKVersion inner join RKMaster where RKVersion.isFavorite = 1 and RKMaster.uuid = RKVersion.masterUuid;\""
+  command = "sqlite3 #{home}/tmp/Photos.sqlite \"select ZDirectory,ZFileName,ZOrientation,ZDateCreated,ZAddedDate from ZGENERICASSET where ZFAVORITE=1;\""
   output = `#{command}`
-  puts "command done ->\n#{output}"
   if not $?.success?
     raise "Cannot run #{command}"
   end
 
-  masters = "#{photos_lib}/Masters"
   images = parse(output)
-  puts "#{images.count} images alltogether"
-  images = images.filter{|image|image.jpg?()}
-  puts "#{images.count} jpg/jpeg/png images"
-
+  images = images.filter{|image|image.supported_format?()}
   done = load_done()
   images.each do |image|
     if done.include?(image.path)
       puts "already transferred #{image.path}"
       next
     end
-    
     begin
-      local_file = image.normalize(masters, "/tmp/transformed")
+      local_file = image.normalize(photos_lib, "/tmp/transformed")
       
-      path = File.dirname(image.path)
+      path = File.dirname(image.path_on_server)
       ssh_path = path.gsub(" ", "-")
 
       server_path = "/share/Qmultimedia/Slideshow/#{ssh_path}"
       sh "ssh #{server} mkdir -p #{server_path}"
-      sh "scp -r \"#{local_file}\" \"#{server}:'#{server_path}/#{File.basename(image.path)}'\""
-
+      sh "scp -r \"#{local_file}\" \"#{server}:'#{server_path}/#{File.basename(image.path_on_server)}'\""
       done[image.path] = true
       save_done(done)
+      
+#      p = File.join("tmp", "ttt", path)
+#      sh "mkdir -p #{p}"
+#      cmd = "cp \"#{local_file}\" \"#{File.join(p, File.basename(image.path_on_server))}\""
+#      sh cmd
     rescue => e
       puts e
       puts e.backtrace
     end
   end
-  sh "rm #{home}/tmp/photos.db"
 end
 
 desc 'show and get server logs'

@@ -81,4 +81,6 @@ rest of the day).
 https://github.com/manifestinteractive/weather-underground-icons
 my-weather-indicator
 
-
+** Import from Photos database
+select count (*) from zgenericasset where zgenericasset.ZFAVORITE=1;
+pragma table_info(zgenericasset);
