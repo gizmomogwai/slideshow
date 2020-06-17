@@ -61,15 +61,16 @@ class Image
   end
   def normalize(photos_library, tmp_file)
     p = from_renders(photos_library) || from_originals(photos_library)
-
-    if File.extname(@path).downcase == ".heic"
+    if heic?(@path)
       converted = "#{tmp_file}-converted.jpg"
       cmd = "convert \"#{p}\" \"#{converted}\""
       res = system cmd
       raise "Cannot run #{cmd}" unless res
-      p = converted
+      cmd = "mv \"#{converted}\" \"#{tmp_file}\""
+      res = system cmd
+      raise "Cannot run #{cmd}" unless res
+      return tmp_file
     end
-
     command =
       case @orientation
       when "1"
@@ -86,14 +87,19 @@ class Image
     res = system(command)
     raise "Cannot execute #{command}" unless res
     
-    tmp_file
+    return tmp_file
   end
 
   JPG_PATTERN = Regexp.new(".*(jpg|jpeg|png)", Regexp::IGNORECASE)
   HEIC_PATTERN = Regexp.new(".*heic", Regexp::IGNORECASE)
   def supported_format?
-    JPG_PATTERN.match(@path) || 
-    HEIC_PATTERN.match(@path)
+    heic?(@path) || jpg?(@path)
+  end
+  def heic?(path)
+    HEIC_PATTERN.match(path)
+  end
+  def jpg?(path)
+    JPG_PATTERN.match(path)
   end
   def to_s
     "Image #{@path} #{@created} #{@added} #{@orientation}"
