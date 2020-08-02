@@ -111,7 +111,7 @@ public class Database extends HandlerThread {
         }
 
         private void updatePredicate() {
-            filter = (image) -> true; // image.creationData.getMonth() == clock.date().getMonth();
+            filter = (image) -> image.creationData.getMonth() == clock.date().getMonth();
         }
 
         private boolean add(List<DatabaseImage> allImages, DatabaseImage image) {
