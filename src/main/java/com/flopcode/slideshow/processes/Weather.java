@@ -135,6 +135,8 @@ public class Weather extends Thread {
         @SerializedName("temp")
         public float temperature;
         public float windSpeed;
+        @SerializedName("wind_deg")
+        public int windDegree;
         public List<WeatherDescription> weather;
     }
 
@@ -156,6 +158,8 @@ public class Weather extends Thread {
         @SerializedName("temp")
         public TemperatureForecast temperatureForecast;
         public float windSpeed;
+        @SerializedName("wind_deg")
+        public int windDegree;
         public List<WeatherDescription> weather;
     }
 

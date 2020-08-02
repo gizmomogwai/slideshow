@@ -55,7 +55,7 @@ public class Main {
         Looper.prepare();
         Slideshow slideshow = new Slideshow(logger, clock, db.imageRequest, whiteboard, screenSize);
         MotionDetector motionDetector = new MotionDetector(logger, slideshow.pause, slideshow.resume);
-//        Weather weather = new Weather(logger, whiteboard);
+        Weather weather = new Weather(logger, whiteboard);
 
         slideshow.canvas.setPreferredSize(screenSize);
         slideshow.canvas.setSize(screenSize);

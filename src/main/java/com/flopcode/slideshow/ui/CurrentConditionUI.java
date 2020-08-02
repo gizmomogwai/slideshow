@@ -44,9 +44,51 @@ class CurrentConditionUI implements UI {
             s = weatherDescriptionToday;
             gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 2 * LINE_DISTANCE);
 
-            // wind-speed
-            s = String.format("%d km/h", Math.round((weatherInfo.current.windSpeed * 3600) / 1000));
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 3 * LINE_DISTANCE);
+            {
+                // wind
+                String windSpeed = String.format("%d km/h", Math.round((weatherInfo.current.windSpeed * 3600) / 1000));
+                String windDegree = WindRange.fromDegree(weatherInfo.current.windDegree).name;
+                gfx.drawString(windDegree, gfx.fromRight(8 + gfx.getStringBounds(windDegree).getWidth()), 45 + 3 * LINE_DISTANCE);
+                gfx.drawString(windSpeed, gfx.fromRight(2 * 8 + gfx.getStringBounds(windSpeed).getWidth() + gfx.getStringBounds(windDegree).getWidth()), 45 + 3 * LINE_DISTANCE);
+            }
+        }
+    }
+
+
+    public static class WindRange {
+        public final double from;
+        public final double to;
+        public final String name;
+
+        private boolean includes(int x) {
+            return from <= x && x <= to;
+        }
+
+        private static final WindRange[] RANGES = new WindRange[] {
+                new WindRange(337.5, 360.0, "N"),
+                new WindRange(0.0, 22.5, "N"),
+                new WindRange(22.5, 67.5, "NE"),
+                new WindRange(67.5, 112.5, "E"),
+                new WindRange(112.5, 157.5, "SE"),
+                new WindRange(157.5, 202.5, "S"),
+                new WindRange(202.5, 247.5, "SW"),
+                new WindRange(247.5, 292.5, "W"),
+                new WindRange(292.5, 337.5, "NW"),
+        };
+
+        public static WindRange fromDegree(int degree) {
+            for (WindRange range : RANGES) {
+                if (range.includes(degree)) {
+                    return range;
+                }
+            }
+            throw new IndexOutOfBoundsException("Cannot process " + degree);
+        }
+
+        private WindRange(double from, double to, String name) {
+            this.from = from;
+            this.to = to;
+            this.name = name;
         }
     }
 }

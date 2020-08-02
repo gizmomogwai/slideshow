@@ -41,9 +41,13 @@ class ForecastUI implements UI {
             s = "" + forecast.weather.get(0).description;
             gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 2 * LINE_DISTANCE);
 
-            // wind speed
-            s = String.format("%d km/h", Math.round((forecast.windSpeed * 3600) / 1000));
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 3 * LINE_DISTANCE);
+            {
+                // wind
+                String windSpeed = String.format("%d km/h", Math.round((forecast.windSpeed * 3600) / 1000));
+                String windDirection = CurrentConditionUI.WindRange.fromDegree(forecast.windDegree).name;
+                gfx.drawString(windDirection, gfx.fromRight(8 + gfx.getStringBounds(windDirection).getWidth()), 45 + 3 * LINE_DISTANCE);
+                gfx.drawString(windSpeed, gfx.fromRight(2 * 8 + gfx.getStringBounds(windSpeed).getWidth() + gfx.getStringBounds(windDirection).getWidth()), 45 + 3 * LINE_DISTANCE);
+            }
         }
     }
 }
