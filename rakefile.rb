@@ -7,7 +7,7 @@ TARGET_PATH = "/home/pi/Pictures/ImageLib"
 
 desc "Build"
 task :build do
-  sh "./gradlew build"
+  sh "./gradlew --watch-fs build"
 end
 
 desc "Deploy slideshow to target"
