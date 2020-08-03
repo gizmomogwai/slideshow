@@ -22,6 +22,7 @@ public class WeatherIcons {
             put("eclipse", "eclipse");
             put("moderate rain", "rain-clouds");
             put("heavy intensity rain", "stormrain-thunders");
+            put("very heavy rain", "stormrain-thunders");
             put("clear sky", "sun");
             put("mist", "moon-and-clouds");
         }
