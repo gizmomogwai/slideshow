@@ -1,13 +1,19 @@
 # coding: utf-8
 require "English"
 
-SSH_TARGET = "pi@slideshow"
+#SSH_TARGET = "pi@slideshow"
+SSH_TARGET = "pi@seehaus.local"
 
 TARGET_PATH = "/home/pi/Pictures/ImageLib"
 
 desc "Build"
 task :build do
   sh "./gradlew --watch-fs build"
+end
+
+desc "Prepare slideshow server"
+task :prepare do
+  sh "scp -r src/systemd/.config/systemd #{SSH_TARGET}:.config/"
 end
 
 desc "Deploy slideshow to target"
@@ -57,7 +63,7 @@ class Image
     end
   end
   def from_originals(photos_library)
-    File.join(photos_library, "originals", @path) 
+    File.join(photos_library, "originals", @path)
   end
   def normalize(photos_library, tmp_file)
     p = from_renders(photos_library) || from_originals(photos_library)
@@ -86,7 +92,7 @@ class Image
       end
     res = system(command)
     raise "Cannot execute #{command}" unless res
-    
+
     return tmp_file
   end
 
@@ -105,7 +111,7 @@ class Image
     "Image #{@path} #{@created} #{@added} #{@orientation}"
   end
   def path_on_server
-    "%04d/%02d/%04d-%02d-%02d/%s" % [@created.year, @created.month, @created.year, @created.month, @created.day, 
+    "%04d/%02d/%04d-%02d-%02d/%s" % [@created.year, @created.month, @created.year, @created.month, @created.day,
       @path
         .gsub("/", "")
         .gsub(" ", "")
@@ -167,7 +173,7 @@ task :copy_images_to_slideshow do
     end
     begin
       local_file = image.normalize(photos_lib, "/tmp/transformed")
-      
+
       path = File.dirname(image.path_on_server)
       ssh_path = path.gsub(" ", "-")
 
@@ -176,7 +182,7 @@ task :copy_images_to_slideshow do
       sh "scp -r \"#{local_file}\" \"#{server}:'#{server_path}/#{File.basename(image.path_on_server)}'\""
       done[image.path] = true
       save_done(done)
-      
+
 #      p = File.join("tmp", "ttt", path)
 #      sh "mkdir -p #{p}"
 #      cmd = "cp \"#{local_file}\" \"#{File.join(p, File.basename(image.path_on_server))}\""

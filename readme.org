@@ -15,6 +15,20 @@ slideshow-watcher.path units.
 
 ** Hardware
 *** RaspberryPi
+PI3 or PI4
+**** Preparation
+- install normal raspian / rapsberry pi os with "minimal" desktop
+- sudo apt install awesome unclutter git tig emacs syncthing
+- install jdk from liberica e.g. https://bell-sw.com/pages/downloads/#/java-15-current
+- change ~/.config/lxsession/LXDE-pi/autostart to nothing
+- change ~/.config/lxsession/LXDE-pi/desktop.conf to use awesome as window manager
+- configure slideshow service in awesomes rc.lua
+- configure syncthing to get the images to ~/Sync/Slideshow
+- rake prepare and deploy
+- disable titlebars in awesome
+  titlebars_enabled = false
+  border_width = 0
+
 *** Motion Sensor
 https://www.amazon.de/gp/product/B00Q6OJ8AC
 https://www.hackster.io/hardikrathod/pir-motion-sensor-with-raspberry-pi-415c04

@@ -14,13 +14,13 @@ public class Constants {
         release();
     }
 
-    static void release() {
+    private static void release() {
         SLIDESHOW_NEXT_IMAGE = ofMinutes(1);
         WEATHER_POLL_CYCLE = ofMinutes(5);
         REFRESH_DISPLAY = ofSeconds(50);
     }
 
-    static void debug() {
+    private static void debug() {
         SLIDESHOW_NEXT_IMAGE = ofSeconds(15);
         WEATHER_POLL_CYCLE = ofSeconds(15);
         REFRESH_DISPLAY = ofSeconds(50);
