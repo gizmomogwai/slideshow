@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -24,6 +25,7 @@ import java.util.List;
 import static com.google.common.primitives.Floats.max;
 import static com.google.common.primitives.Floats.min;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Weather extends Thread {
 
@@ -31,10 +33,15 @@ public class Weather extends Thread {
     private final Whiteboard whiteboard;
     private final Logger logger;
     private final MinMax minMax = new MinMax();
+    private final String[] latLon;
 
-    public Weather(Logger logger, Whiteboard whiteboard) {
+    public Weather(Logger logger, Whiteboard whiteboard, String latLon) {
         this.logger = logger;
         this.whiteboard = whiteboard;
+        this.latLon = latLon.split(",");
+        if (this.latLon.length != 2) {
+            throw new IllegalArgumentException("Cannot parse latlon: '" + latLon + "'");
+        }
         start();
     }
 
@@ -76,8 +83,9 @@ public class Weather extends Thread {
 
     private void updateWeather() throws Exception {
         // Carola-Neher-Str 10, 48.0878521,11.5414829
+        // Seewaldweg 15, 47.6786727,11.1842269
         String requestUrl =
-                format("https://api.openweathermap.org/data/2.5/onecall?lat=48.0878521&lon=11.5414829&units=metric&appid=%s",
+                format("https://api.openweathermap.org/data/2.5/onecall?lat=" + latLon[0] + "&lon=" + latLon[1] + "&units=metric&appid=%s",
                         APP_ID);
         WeatherInfo forecastWeatherInfo = get(requestUrl, WeatherInfo.class);
         minMax.update(forecastWeatherInfo);
@@ -100,15 +108,14 @@ public class Weather extends Thread {
             if (in != null) {
                 long epochMilli = in.nextLong();
                 Instant instant = Instant.ofEpochMilli(epochMilli * 1000);
-                LocalDateTime local = instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
-                return local;
+                return instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
             } else {
                 return null;
             }
         }
     }
 
-    private <T> T get(String s, Class<T> clazz) throws IOException, ParserConfigurationException, SAXException {
+    private <T> T get(String s, Class<T> clazz) throws IOException {
         URL url = new URL(s);
         logger.d("Weather.getDocument - " + url);
         URLConnection connection = url.openConnection();
@@ -122,7 +129,7 @@ public class Weather extends Thread {
                 .fromJson(
                         new InputStreamReader(
                                 connection.getInputStream(),
-                                "UTF-8"),
+                                UTF_8),
                         clazz);
 
         logger.i("Got weatherInfo: " + new GsonBuilder().setPrettyPrinting().create().toJson(result));

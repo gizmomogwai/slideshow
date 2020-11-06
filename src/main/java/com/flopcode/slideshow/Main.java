@@ -17,8 +17,13 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.FileReader;
+import java.util.Properties;
 
 import static com.flopcode.slideshow.logger.Logger.Level.INFO;
+import static java.lang.Boolean.getBoolean;
+import static java.lang.String.join;
+import static java.lang.System.getenv;
 
 /**
  * Filescanner scans the filesystem and sends imagepaths to the database
@@ -38,8 +43,16 @@ import static com.flopcode.slideshow.logger.Logger.Level.INFO;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        Logger logger = new StdoutLogger(INFO);
-        Clock clock = new RealClock();
+        final Logger logger = new StdoutLogger(INFO);
+        final Properties prefs = getPreferences(logger);
+        final boolean startMotionDetector = getBoolean(prefs.getProperty("motionDetector", "true"));
+        final String[] images = prefs.getProperty("images").split(",");
+        final String weatherLatLon = prefs.getProperty("weatherLatLon");
+
+        logger.i("images=" + join(", ", images));
+        logger.i("motionDetector=" + startMotionDetector);
+
+        final Clock clock = new RealClock();
         Whiteboard whiteboard = new Whiteboard();
 
         System.setProperty("awt.useSystemAAFontSettings", "on");
@@ -51,11 +64,13 @@ public class Main {
         //screenSize.height /= 2;
 
         Database db = new Database(logger, clock, whiteboard);
-        FileScanner scanner = new FileScanner(logger, db.fileReceiver, args);
+        FileScanner scanner = new FileScanner(logger, db.fileReceiver, images);
         Looper.prepare();
         Slideshow slideshow = new Slideshow(logger, clock, db.imageRequest, whiteboard, screenSize);
-        MotionDetector motionDetector = new MotionDetector(logger, slideshow.pause, slideshow.resume);
-        Weather weather = new Weather(logger, whiteboard);
+        if (startMotionDetector) {
+            MotionDetector motionDetector = new MotionDetector(logger, slideshow.pause, slideshow.resume);
+        }
+        Weather weather = new Weather(logger, whiteboard, weatherLatLon);
 
         slideshow.canvas.setPreferredSize(screenSize);
         slideshow.canvas.setSize(screenSize);
@@ -73,7 +88,7 @@ public class Main {
             @Override
             public void keyTyped(KeyEvent e) {
                 switch (e.getKeyChar()) {
-                    case 'd':
+                case 'd':
                     slideshow.nextStep.sendMessage(new Message());
                     break;
                 }
@@ -96,4 +111,15 @@ public class Main {
         slideshow.startup();
     }
 
+    private static Properties getPreferences(Logger logger) {
+        logger.i("Loading preferences");
+        Properties result = new Properties();
+        String preferencesPath = getenv("HOME") + "/.config/slideshow/slideshow.properties";
+        try {
+            result.load(new FileReader(preferencesPath));
+        } catch (Exception e) {
+            logger.e("Cannot load preferences from '" + preferencesPath + "'");
+        }
+        return result;
+    }
 }
