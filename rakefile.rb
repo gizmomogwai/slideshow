@@ -2,7 +2,12 @@
 require "English"
 
 #SSH_TARGET = "pi@slideshow"
-SSH_TARGET = "pi@seehaus.local"
+#SSH_TARGET = "pi@seehaus.local"
+
+SSH_TARGETS = [
+  "pi@slideshow",
+  "pi@seehaus.local",
+]
 
 TARGET_PATH = "/home/pi/Pictures/ImageLib"
 
@@ -11,36 +16,26 @@ task :build do
   sh "./gradlew --watch-fs build"
 end
 
-desc "Prepare slideshow server"
-task :prepare do
-  sh "scp -r src/systemd/.config/systemd #{SSH_TARGET}:.config/"
-end
 
-desc "Deploy slideshow to target"
-task :deploy => [:build] do
-  sh "ssh #{SSH_TARGET} mkdir -p #{TARGET_PATH}"
-  sh "ls -lha build/libs/slideshow-all.jar"
-  sh "scp build/libs/slideshow-all.jar #{SSH_TARGET}:#{TARGET_PATH}"
-  sh "ssh #{SSH_TARGET} touch #{TARGET_PATH}/slideshow-all.jar-updated"
-end
-
-desc "Deploy images to target"
-task :deploy_images do
-  ["2013/06", "2012/06"].each do |path|
-    year = path.split("/").first
-    sh "ssh #{SSH_TARGET} mkdir -p #{TARGET_PATH}/#{year}"
-    sh "scp -r ~/Pictures/ImageLib/#{path} #{SSH_TARGET}:#{TARGET_PATH}/#{year}"
-  end
-end
+#desc "Deploy images to target"
+#task :deploy_images do
+#  ["2013/06", "2012/06"].each do |path|
+#   year = path.split("/").first
+#    sh "ssh #{SSH_TARGET} mkdir -p #{TARGET_PATH}/#{year}"
+#    sh "scp -r ~/Pictures/ImageLib/#{path} #{SSH_TARGET}:#{TARGET_PATH}/#{year}"
+#  end
+#end
 
 
 def server
   "qnappi"
 end
+
 require 'date'
 def reference
   DateTime.new(2001, 01, 01)
 end
+
 class Image
   attr_reader :path, :created, :added
   def initialize(path, orientation, created, added)
@@ -194,18 +189,35 @@ task :copy_images_to_slideshow do
   end
 end
 
-desc 'show and get server logs'
-task :show_and_get_server_logs do
-  sh "ssh #{SSH_TARGET} journalctl --user-unit=slideshow | tee logs.txt"
-end
-task :default => [:deploy]
+SSH_TARGETS.each do |target|
+  namespace target do
+    desc "Prepare slideshow server on #{target}"
+    task :prepare do
+      sh "scp -r src/systemd/.config/systemd #{target}:.config/"
+      sh "ssh #{target} systemctl --user daemon-reload"
+    end
 
-desc "restart server"
-task :restart_server do
-  sh "ssh #{SSH_TARGET} systemctl restart --user slideshow"
-end
+    desc "Deploy slideshow to #{target}"
+    task :deploy => [:build] do
+      sh "ssh #{target} mkdir -p #{TARGET_PATH}"
+      sh "ls -lha build/libs/slideshow-all.jar"
+      sh "scp build/libs/slideshow-all.jar #{target}:#{TARGET_PATH}"
+      sh "ssh #{target} touch #{TARGET_PATH}/slideshow-all.jar-updated"
+    end
 
-desc "Vaccum logs on the server"
-task :vaccum do
-  sh "ssh #{SSH_TARGET} journalctl --vacuum-time=8h"
+    desc "show and get server logs from #{target}"
+    task :show_and_get_server_logs do
+      sh "ssh #{target} journalctl --user-unit=slideshow | tee logs.txt"
+    end
+
+    desc "restart server on #{target}"
+    task :restart_server do
+      sh "ssh #{target} systemctl restart --user slideshow"
+    end
+
+    desc "Vaccum logs on #{target}"
+    task :vaccum do
+      sh "ssh #{target} journalctl --vacuum-time=8h"
+    end
+  end
 end
