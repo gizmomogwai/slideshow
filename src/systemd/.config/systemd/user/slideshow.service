@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/home/pi
-ExecStart=/home/pi/bin/jdk-15/bin/java -jar /home/pi/Pictures/ImageLib/slideshow-all.jar ~/Sync/Slideshow
+ExecStart=/home/pi/bin/jdk-15-full/bin/java -jar /home/pi/Pictures/ImageLib/slideshow-all.jar ~/Sync/Slideshow
 
 [Install]
 WantedBy=multi-user.target
