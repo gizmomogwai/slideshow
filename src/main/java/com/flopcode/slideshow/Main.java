@@ -48,6 +48,7 @@ public class Main {
         final boolean startMotionDetector = getBoolean(prefs.getProperty("motionDetector", "true"));
         final String[] images = prefs.getProperty("images").split(",");
         final String weatherLatLon = prefs.getProperty("weatherLatLon");
+        final String weatherAppToken = prefs.getProperty("weatherAppToken");
 
         logger.i("images=" + join(", ", images));
         logger.i("motionDetector=" + startMotionDetector);
@@ -70,7 +71,7 @@ public class Main {
         if (startMotionDetector) {
             MotionDetector motionDetector = new MotionDetector(logger, slideshow.pause, slideshow.resume);
         }
-        Weather weather = new Weather(logger, whiteboard, weatherLatLon);
+        Weather weather = new Weather(logger, whiteboard, weatherLatLon, weatherAppToken);
 
         slideshow.canvas.setPreferredSize(screenSize);
         slideshow.canvas.setSize(screenSize);

@@ -9,14 +9,11 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -29,16 +26,17 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Weather extends Thread {
 
-    private static final String APP_ID = "9d8617eb77cba019774d79121d412a0e";
     private final Whiteboard whiteboard;
     private final Logger logger;
     private final MinMax minMax = new MinMax();
     private final String[] latLon;
+    private final String appToken;
 
-    public Weather(Logger logger, Whiteboard whiteboard, String latLon) {
+    public Weather(Logger logger, Whiteboard whiteboard, String latLon, String appToken) {
         this.logger = logger;
         this.whiteboard = whiteboard;
         this.latLon = latLon.split(",");
+        this.appToken = appToken;
         if (this.latLon.length != 2) {
             throw new IllegalArgumentException("Cannot parse latlon: '" + latLon + "'");
         }
@@ -83,10 +81,10 @@ public class Weather extends Thread {
 
     private void updateWeather() throws Exception {
         // Carola-Neher-Str 10, 48.0878521,11.5414829
-        // Seewaldweg 15, 47.6786727,11.1842269
+        // Seewaldweg 15, 47.678710, 11.186446
         String requestUrl =
                 format("https://api.openweathermap.org/data/2.5/onecall?lat=" + latLon[0] + "&lon=" + latLon[1] + "&units=metric&appid=%s",
-                        APP_ID);
+                        appToken);
         WeatherInfo forecastWeatherInfo = get(requestUrl, WeatherInfo.class);
         minMax.update(forecastWeatherInfo);
 
