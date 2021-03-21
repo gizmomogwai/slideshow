@@ -98,3 +98,14 @@ my-weather-indicator
 ** Import from Photos database
 select count (*) from zgenericasset where zgenericasset.ZFAVORITE=1;
 pragma table_info(zgenericasset);
+
+* TODO still draw the rest, even if there is a problem with the image
+Mär 21 15:40:33 slideshow java[4883]:         at mindroid.os.HandlerThread.run(HandlerThread.java:54)
+Mär 21 15:40:33 slideshow java[4883]: E Slideshow.handleMessage - cannot handle DatabaseImage(file=/mnt/Slideshow/2018/03/2018-03-21/55FFD37C2-F63A-47D6-A8EF-E55C4F1BE461.jpeg)
+Mär 21 15:40:33 slideshow java[4883]: javax.imageio.IIOException: Can't read input file!
+Mär 21 15:40:33 slideshow java[4883]:         at java.desktop/javax.imageio.ImageIO.read(ImageIO.java:1308)
+Mär 21 15:40:33 slideshow java[4883]:         at com.flopcode.slideshow.SlideshowCanvas.loadImage(SlideshowCanvas.java:115)
+Mär 21 15:40:33 slideshow java[4883]:         at com.flopcode.slideshow.SlideshowCanvas.transitionTo(SlideshowCanvas.java:87)
+Mär 21 15:40:33 slideshow java[4883]:         at com.flopcode.slideshow.Slideshow$1.handleMessage(Slideshow.java:44)
+Mär 21 15:40:33 slideshow java[4883]:         at mindroid.os.Handler.dispatchMessage(Handler.java:100)
+Mär 21 15:40:33 slideshow java[4883]:         at mindroid.os.Looper.loop(Looper.java:93)
