@@ -199,8 +199,24 @@ public class SlideshowCanvas extends Canvas {
                     LocalDate.of(2020, 12, 24),
                     LocalDate.of(2020, 12, 25),
                     LocalDate.of(2020, 12, 26),
-                    LocalDate.of(2020, 12, 31)
-            ));
+                    LocalDate.of(2020, 12, 31),
+                    // 2021
+                    LocalDate.of(2021, 1,1),
+                    LocalDate.of(2021, 1, 6),
+                    LocalDate.of(2021, 4, 2),
+                    LocalDate.of(2021, 4, 5),
+                    LocalDate.of(2021, 5, 1),
+                    LocalDate.of(2021, 5, 13),
+                    LocalDate.of(2021, 5, 24),
+                    LocalDate.of(2021, 6, 3),
+                    LocalDate.of(2021, 8,15),
+                    LocalDate.of(2021, 10, 3),
+                    LocalDate.of(2021, 11, 1),
+                    LocalDate.of(2021, 12, 24),
+                    LocalDate.of(2021, 12, 25),
+                    LocalDate.of(2021, 12, 26),
+                    LocalDate.of(2021, 12, 31)
+                    ));
         }
 
         boolean isPublicHoliday(LocalDate date) {
