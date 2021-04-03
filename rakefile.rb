@@ -6,7 +6,7 @@ require "English"
 
 SSH_TARGETS = [
   "pi@slideshow",
-  "pi@seehaus.local",
+  "pi@seehaus-blau.local",
 ]
 
 TARGET_PATH = "/home/pi/Pictures/ImageLib"
