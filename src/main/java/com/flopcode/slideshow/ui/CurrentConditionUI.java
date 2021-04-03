@@ -5,7 +5,7 @@ import com.flopcode.slideshow.data.weather.WeatherIcons;
 import com.flopcode.slideshow.processes.Weather;
 
 import java.awt.Graphics2D;
-import java.awt.Image;
+import java.util.Optional;
 
 class CurrentConditionUI implements UI {
 
@@ -21,36 +21,23 @@ class CurrentConditionUI implements UI {
     @Override
     public void render(Gfx gfx, Graphics2D g) throws Exception {
         if (weatherInfo != null) {
-            // icon
+
             String weatherDescriptionToday = weatherInfo.dailies.get(0).weather.get(0).description;
-            Image now = icons.get(weatherDescriptionToday);
-            gfx.drawImage(now, gfx.fromRight(80 + now.getWidth(null)), 0);
-
-            // current temperature
-            String s = "" + Math.round(weatherInfo.current.temperature);
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
-
             Weather.TemperatureForecast temperatureForecast = weatherInfo.dailies.get(0).temperatureForecast;
+            float currentTemperature = weatherInfo.current.temperature;
+            float minTemperature = temperatureForecast.min;
+            float maxTemperature = temperatureForecast.max;
+            float windSpeed = (weatherInfo.current.windSpeed * 3600) / 1000;
+            int windDegree = weatherInfo.current.windDegree;
 
-            // daily minimum
-            s = "" + Math.round(temperatureForecast.min);
-            gfx.drawString(s, gfx.fromRight(50 + gfx.getStringBounds(s).getWidth()), 45 + LINE_DISTANCE);
-
-            // daily maximum
-            s = "" + Math.round(temperatureForecast.max);
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + LINE_DISTANCE);
-
-            // weather description (e.g. rainy)
-            s = weatherDescriptionToday;
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 2 * LINE_DISTANCE);
-
-            {
-                // wind
-                String windSpeed = String.format("%d km/h", Math.round((weatherInfo.current.windSpeed * 3600) / 1000));
-                String windDegree = WindRange.fromDegree(weatherInfo.current.windDegree).name;
-                gfx.drawString(windDegree, gfx.fromRight(8 + gfx.getStringBounds(windDegree).getWidth()), 45 + 3 * LINE_DISTANCE);
-                gfx.drawString(windSpeed, gfx.fromRight(2 * 8 + gfx.getStringBounds(windSpeed).getWidth() + gfx.getStringBounds(windDegree).getWidth()), 45 + 3 * LINE_DISTANCE);
-            }
+            ForecastUI.renderWeatherConditions(gfx,
+                    icons,
+                    weatherDescriptionToday,
+                    Optional.of(currentTemperature),
+                    minTemperature,
+                    maxTemperature,
+                    windSpeed,
+                    windDegree);
         }
     }
 

@@ -6,6 +6,7 @@ import com.flopcode.slideshow.processes.Weather;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.util.Optional;
 import java.util.function.Function;
 
 class ForecastUI implements UI {
@@ -18,36 +19,55 @@ class ForecastUI implements UI {
         whiteboard.add("weatherInfo", (key, value) -> forecast = transform.apply((Weather.WeatherInfo) value));
     }
 
+    public static void renderWeatherConditions(Gfx gfx, WeatherIcons icons, String weatherDescriptionToday, Optional<Float> currentTemperature, float minTemperature, float maxTemperature, float windSpeedF, int windDegreeI) throws Exception {
+        // icon
+        Image now = icons.get(weatherDescriptionToday);
+        gfx.drawImage(now, gfx.fromRight(80 + now.getWidth(null)), 0);
+
+        // current temperature
+        if (currentTemperature.isPresent()) {
+            String s = "" + Math.round(currentTemperature.get());
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
+        }
+
+        // daily minimum
+        {
+            String s = "" + Math.round(minTemperature);
+            gfx.drawString(s, gfx.fromRight(50 + gfx.getStringBounds(s).getWidth()), 45 + CurrentConditionUI.LINE_DISTANCE);
+        }
+        // daily maximum
+        {
+            String s = "" + Math.round(maxTemperature);
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + CurrentConditionUI.LINE_DISTANCE);
+        }
+        // weather description (e.g. rainy)
+        {
+            String s = weatherDescriptionToday;
+            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 2 * CurrentConditionUI.LINE_DISTANCE);
+        }
+        {
+            // wind
+            String windSpeed = String.format("%d km/h", Math.round(windSpeedF));
+            String windDegree = CurrentConditionUI.WindRange.fromDegree(windDegreeI).name;
+            gfx.drawString(windDegree, gfx.fromRight(8 + gfx.getStringBounds(windDegree).getWidth()), 45 + 3 * CurrentConditionUI.LINE_DISTANCE);
+            gfx.drawString(windSpeed, gfx.fromRight(2 * 8 + gfx.getStringBounds(windSpeed).getWidth() + gfx.getStringBounds(windDegree).getWidth()), 45 + 3 * CurrentConditionUI.LINE_DISTANCE);
+        }
+    }
+
 
     @Override
     public void render(Gfx gfx, Graphics2D g) throws Exception {
         if (forecast != null) {
-            final int LINE_DISTANCE = 34;
-
-            // icon
-            Image now = icons.get(forecast.weather.get(0).description);
-            gfx.drawImage(now, gfx.fromRight(80 + now.getWidth(null)), 0);
-
-            // daily minimum
             Weather.TemperatureForecast temperatureForecast = forecast.temperatureForecast;
-            String s = "" + Math.round(temperatureForecast.min);
-            gfx.drawString(s, gfx.fromRight(50 + gfx.getStringBounds(s).getWidth()), 45 + LINE_DISTANCE);
-
-            // daily maximum
-            s = "" + Math.round(temperatureForecast.max);
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + LINE_DISTANCE);
-
-            // weather description (e.g. rainy)
-            s = "" + forecast.weather.get(0).description;
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + 2 * LINE_DISTANCE);
-
-            {
-                // wind
-                String windSpeed = String.format("%d km/h", Math.round((forecast.windSpeed * 3600) / 1000));
-                String windDirection = CurrentConditionUI.WindRange.fromDegree(forecast.windDegree).name;
-                gfx.drawString(windDirection, gfx.fromRight(8 + gfx.getStringBounds(windDirection).getWidth()), 45 + 3 * LINE_DISTANCE);
-                gfx.drawString(windSpeed, gfx.fromRight(2 * 8 + gfx.getStringBounds(windSpeed).getWidth() + gfx.getStringBounds(windDirection).getWidth()), 45 + 3 * LINE_DISTANCE);
-            }
+            renderWeatherConditions(gfx,
+                    icons,
+                    forecast.weather.get(0).description,
+                    Optional.empty(),
+                    temperatureForecast.min,
+                    temperatureForecast.max,
+                    (forecast.windSpeed * 3600) / 1000,
+                    forecast.windDegree
+            );
         }
     }
 }
