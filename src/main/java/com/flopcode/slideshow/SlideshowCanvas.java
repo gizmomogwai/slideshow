@@ -84,30 +84,36 @@ public class SlideshowCanvas extends Canvas {
         if (next == null) {
             throw new IllegalArgumentException();
         }
-        SlideshowImage nextImage = new SlideshowImage(logger, clock, next, loadImage(next.getFile(), screenSize), fonts.subtitles, geoLocationCache);
+        try {
+            SlideshowImage nextImage = new SlideshowImage(logger, clock, next, loadImage(next.getFile(), screenSize), fonts.subtitles, geoLocationCache);
 
-        for (float i = 0; i < 1; i += 0.02) {
+            for (float i = 0; i < 1; i += 0.02) {
+                renderDoubleBuffered(screenSize, i, (g, alpha) -> {
+                    g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
+                    g.setComposite(AlphaComposite.getInstance(SRC_OVER, 1 - alpha));
+                    if (current != null) {
+                        current.render(g, screenSize);
+                    }
+                    g.setComposite(AlphaComposite.getInstance(SRC_OVER, alpha));
+                    nextImage.render(g, screenSize);
+                    g.render(onTop, 0, 0);
+                });
+            }
 
-            renderDoubleBuffered(screenSize, i, (g, alpha) -> {
+            current.dispose();
+            current = nextImage;
+
+            renderDoubleBuffered(screenSize, null, (g, nothing) -> {
                 g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-                g.setComposite(AlphaComposite.getInstance(SRC_OVER, 1 - alpha));
-                current.render(g, screenSize);
-                g.setComposite(AlphaComposite.getInstance(SRC_OVER, alpha));
-                nextImage.render(g, screenSize);
-
+                if (current != null) {
+                    current.render(g, screenSize);
+                }
                 g.render(onTop, 0, 0);
             });
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.e("Cannot transition to new image " + e.getMessage());
         }
-
-        current.dispose();
-        current = nextImage;
-
-        renderDoubleBuffered(screenSize, null, (g, nothing) -> {
-            g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-            current.render(g, screenSize);
-
-            g.render(onTop, 0, 0);
-        });
     }
 
     private Image loadImage(File file, Dimension screenSize) throws Exception {
@@ -201,7 +207,7 @@ public class SlideshowCanvas extends Canvas {
                     LocalDate.of(2020, 12, 26),
                     LocalDate.of(2020, 12, 31),
                     // 2021
-                    LocalDate.of(2021, 1,1),
+                    LocalDate.of(2021, 1, 1),
                     LocalDate.of(2021, 1, 6),
                     LocalDate.of(2021, 4, 2),
                     LocalDate.of(2021, 4, 5),
@@ -209,14 +215,14 @@ public class SlideshowCanvas extends Canvas {
                     LocalDate.of(2021, 5, 13),
                     LocalDate.of(2021, 5, 24),
                     LocalDate.of(2021, 6, 3),
-                    LocalDate.of(2021, 8,15),
+                    LocalDate.of(2021, 8, 15),
                     LocalDate.of(2021, 10, 3),
                     LocalDate.of(2021, 11, 1),
                     LocalDate.of(2021, 12, 24),
                     LocalDate.of(2021, 12, 25),
                     LocalDate.of(2021, 12, 26),
                     LocalDate.of(2021, 12, 31)
-                    ));
+            ));
         }
 
         boolean isPublicHoliday(LocalDate date) {
@@ -230,23 +236,23 @@ public class SlideshowCanvas extends Canvas {
         private static final int STEP_WIDTH = 48;
 
         public static void render(Graphics2D g, int offset, com.flopcode.slideshow.ui.Font smallFont, LocalDate now, PublicHolidays publicHolidays) {
-            LocalDate current = now;
+            LocalDate currentDate = now;
             int nrOfDays = 31;
             ColorScheme colorScheme = new ColorScheme(Color.white, Color.red, new Color(0x71A95A));
             int i = 1;
             while (nrOfDays > 0) {
                 nrOfDays--;
-                Color color = publicHolidays.isPublicHoliday(current) ? colorScheme.publicHoliday :
-                        (current.getDayOfWeek() == SUNDAY || current.getDayOfWeek() == SATURDAY) ? colorScheme.sunday : colorScheme.normal;
-                boolean renderingCurrentDay = current.equals(now);
-                centerDay(g, current, offset, i++, smallFont, renderingCurrentDay, color);
-                LocalDate next = current.plusDays(1);
-                if (current.getMonth() != next.getMonth()) {
+                Color color = publicHolidays.isPublicHoliday(currentDate) ? colorScheme.publicHoliday :
+                        (currentDate.getDayOfWeek() == SUNDAY || currentDate.getDayOfWeek() == SATURDAY) ? colorScheme.sunday : colorScheme.normal;
+                boolean renderingCurrentDay = currentDate.equals(now);
+                centerDay(g, currentDate, offset, i++, smallFont, renderingCurrentDay, color);
+                LocalDate next = currentDate.plusDays(1);
+                if (currentDate.getMonth() != next.getMonth()) {
                     g.setColor(Color.WHITE);
                     int x = (int) (offset + (i - 0.5) * STEP_WIDTH) + 4;
                     g.drawLine(x, FIRST_LINE_Y - smallFont.metrics.getAscent() + 5, x, SECOND_LINE_Y + 5);
                 }
-                current = next;
+                currentDate = next;
             }
         }
 
