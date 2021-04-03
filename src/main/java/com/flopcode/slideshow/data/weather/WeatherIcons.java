@@ -13,18 +13,20 @@ public class WeatherIcons {
 
     private HashMap<String, String> condition2Icon = new HashMap<String, String>() {
         {
-            put("few clouds", "sun-and-clouds");
-            put("overcast clouds", "sun-and-clouds");
-            put("scattered clouds", "sun-and-clouds");
             put("broken clouds", "sun-and-clouds");
-            put("light rain", "rain-clouds");
-            put("shower rain", "rain-clouds");
-            put("eclipse", "eclipse");
-            put("moderate rain", "rain-clouds");
-            put("heavy intensity rain", "stormrain-thunders");
-            put("very heavy rain", "stormrain-thunders");
             put("clear sky", "sun");
+            put("eclipse", "eclipse");
+            put("few clouds", "sun-and-clouds");
+            put("heavy intensity rain", "stormrain-thunders");
+            put("light rain", "rain-clouds");
+            put("light snow", "snow-clouds");
             put("mist", "moon-and-clouds");
+            put("moderate rain", "rain-clouds");
+            put("overcast clouds", "sun-and-clouds");
+            put("rain and snow", "snow-clouds");
+            put("scattered clouds", "sun-and-clouds");
+            put("shower rain", "rain-clouds");
+            put("very heavy rain", "stormrain-thunders");
         }
     };
 
@@ -46,8 +48,8 @@ public class WeatherIcons {
             return imageCache.get(key);
         }
         if (!condition2Icon.containsKey(current)) {
+            logger.e("WeatherIcon.get - cannot find " + current + " falling back to eclipse");
             current = "eclipse";
-            logger.e("WeatherIcon.get - cannot find " + current);
         }
 
         String file = condition2Icon.get(current);
