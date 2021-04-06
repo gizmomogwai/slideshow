@@ -26,7 +26,7 @@ public class WeatherIcons {
             put("rain and snow", "snow-clouds");
             put("scattered clouds", "sun-and-clouds");
             put("shower rain", "rain-clouds");
-            put("snow falling", "snow-clouds");
+            put("snow", "snow-clouds");
             put("very heavy rain", "stormrain-thunders");
         }
     };
