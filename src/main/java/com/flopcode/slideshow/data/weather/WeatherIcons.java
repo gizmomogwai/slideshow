@@ -26,6 +26,7 @@ public class WeatherIcons {
             put("rain and snow", "snow-clouds");
             put("scattered clouds", "sun-and-clouds");
             put("shower rain", "rain-clouds");
+            put("snow falling", "snow-clouds");
             put("very heavy rain", "stormrain-thunders");
         }
     };
@@ -48,7 +49,7 @@ public class WeatherIcons {
             return imageCache.get(key);
         }
         if (!condition2Icon.containsKey(current)) {
-            logger.e("WeatherIcon.get - cannot find " + current + " falling back to eclipse");
+            logger.e("WeatherIcon.get - cannot find '" + current + "' falling back to 'eclipse'");
             current = "eclipse";
         }
 
