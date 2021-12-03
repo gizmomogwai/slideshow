@@ -172,9 +172,11 @@ task :copy_images_to_slideshow do
       path = File.dirname(image.path_on_server)
       ssh_path = path.gsub(" ", "-")
 
-      server_path = "/share/Qmultimedia/Slideshow/#{ssh_path}"
-      sh "ssh #{server} mkdir -p #{server_path}"
-      sh "scp -r \"#{local_file}\" \"#{server}:'#{server_path}/#{File.basename(image.path_on_server)}'\""
+      target_path = "#{ENV['HOME']}/Sync/Slideshow/#{ssh_path}/#{File.basename(image.path_on_server)}"
+#      sh "ssh #{server} mkdir -p #{server_path}"
+      #      sh "scp -r \"#{local_file}\" \"#{server}:'#{server_path}/#{File.basename(image.path_on_server)}'\""
+      sh "mkdir -p \"#{File.dirname(target_path)}\""
+      sh "cp \"#{local_file}\" \"#{target_path}\""
       done[image.path] = true
       save_done(done)
 
