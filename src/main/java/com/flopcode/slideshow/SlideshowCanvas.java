@@ -221,7 +221,23 @@ public class SlideshowCanvas extends Canvas {
                     LocalDate.of(2021, 12, 24),
                     LocalDate.of(2021, 12, 25),
                     LocalDate.of(2021, 12, 26),
-                    LocalDate.of(2021, 12, 31)
+                    LocalDate.of(2021, 12, 31),
+                    // 2022
+                    LocalDate.of(2022, 1, 1),
+                    LocalDate.of(2022, 1, 6),
+                    LocalDate.of(2022, 4, 15),
+                    LocalDate.of(2022, 4, 18),
+                    LocalDate.of(2022, 5, 1),
+                    LocalDate.of(2022, 5, 26),
+                    LocalDate.of(2022, 6, 6),
+                    LocalDate.of(2022, 6, 16),
+                    LocalDate.of(2022, 8, 15),
+                    LocalDate.of(2022, 10, 3),
+                    LocalDate.of(2022, 11, 1),
+                    LocalDate.of(2022, 12, 24),
+                    LocalDate.of(2022, 12, 25),
+                    LocalDate.of(2022, 12, 26),
+                    LocalDate.of(2022, 12, 31)
             ));
         }
 
