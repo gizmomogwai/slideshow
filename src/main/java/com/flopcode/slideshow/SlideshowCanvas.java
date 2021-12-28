@@ -80,7 +80,7 @@ public class SlideshowCanvas extends Canvas {
         buffers.show();
     }
 
-    void transitionTo(Logger logger, Clock clock, DatabaseImage next) throws Exception {
+    void transitionTo(Logger logger, Clock clock, DatabaseImage next) {
         if (next == null) {
             throw new IllegalArgumentException();
         }
