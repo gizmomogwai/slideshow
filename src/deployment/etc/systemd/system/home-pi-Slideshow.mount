@@ -1,0 +1,14 @@
+[Unit]
+Description=Mount #{name}
+After=network-online.target
+Wants=network-online.target
+
+[Mount]
+What=http://#{server}/Slideshow
+Where=/home/pi/Slideshow
+Options=uid=1000,file_mode=0664,dir_mode=2775,grpid
+Type=davfs
+TimeoutSec=15
+
+[Install]
+WantedBy=multi-user.target

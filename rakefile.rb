@@ -9,7 +9,7 @@ SSH_TARGETS = [
   "pi@seehaus-blau.local",
 ]
 
-TARGET_PATH = "/home/pi/Pictures/ImageLib"
+TARGET_PATH = "/home/pi/"
 
 desc "Build"
 task :build do
