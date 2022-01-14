@@ -19,12 +19,14 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class FileScanner extends Thread {
 
     private final Handler fileReceiver;
+    private Handler doneReceiver;
     private final String[] baseDirs;
     private final Logger logger;
 
-    public FileScanner(Logger logger, Handler fileReceiver, String... baseDirs) {
+    public FileScanner(Logger logger, Handler fileReceiver, Handler doneReceiver, String... baseDirs) {
         this.logger = logger;
         this.fileReceiver = fileReceiver;
+        this.doneReceiver = doneReceiver;
         this.baseDirs = baseDirs;
         start();
     }
@@ -55,6 +57,7 @@ public class FileScanner extends Thread {
                         return FileVisitResult.CONTINUE;
                     }
                 });
+                doneReceiver.sendMessage(new Message());
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -18,6 +18,7 @@ import java.util.function.Predicate;
 public class Database extends HandlerThread {
 
     public Handler fileReceiver;
+    public Handler doneReceiver;
     public Handler imageRequest;
     private Handler requestor = null;
 
@@ -39,6 +40,12 @@ public class Database extends HandlerThread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            }
+        };
+        doneReceiver = new Handler(getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                done();
             }
         };
         imageRequest = new Handler(getLooper()) {
@@ -65,11 +72,15 @@ public class Database extends HandlerThread {
         }
     }
 
+    private void done() {
+        filteredImages.shuffle();
+    }
+
     private void sendBackToRequestor() {
         if (requestor != null) {
             DatabaseImage nextImage = next();
-            System.out.println("Database.sendBackToRequestor() " + nextImage);
             if (nextImage != null) {
+                System.out.println("Database.sendBackToRequestor() " + nextImage);
                 requestor.sendMessage(new Message().setData(new Bundle().putObject("image", nextImage)));
                 requestor = null;
             }
@@ -118,8 +129,10 @@ public class Database extends HandlerThread {
             this.allImages = allImages;
             if (filter.test(image)) {
                 images.add(image);
-                Collections.shuffle(images);
-                index = -1;
+                if (images.size() % 50 == 0) {
+                    shuffle();
+                    index = -1;
+                }
                 updateStatistics();
                 return true;
             }
@@ -152,11 +165,15 @@ public class Database extends HandlerThread {
             index++;
             if (index == images.size()) {
                 index = 0;
-                Collections.shuffle(images);
+                shuffle();
             }
             updateStatistics();
 
             return images.get(index);
+        }
+
+        public void shuffle() {
+            Collections.shuffle(images);
         }
     }
 }

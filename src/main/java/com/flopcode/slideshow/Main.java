@@ -20,6 +20,7 @@ import java.awt.event.KeyEvent;
 import java.io.FileReader;
 import java.util.Properties;
 
+import static com.flopcode.slideshow.logger.Logger.Level.DEBUG;
 import static com.flopcode.slideshow.logger.Logger.Level.INFO;
 import static java.lang.Boolean.getBoolean;
 import static java.lang.String.join;
@@ -43,7 +44,7 @@ import static java.lang.System.getenv;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        final Logger logger = new StdoutLogger(INFO);
+        final Logger logger = new StdoutLogger(DEBUG);
         final Properties prefs = getPreferences(logger);
         final boolean startMotionDetector = getBoolean(prefs.getProperty("motionDetector", "true"));
         final String[] images = prefs.getProperty("images").split(",");
@@ -65,7 +66,7 @@ public class Main {
         //screenSize.height /= 2;
 
         Database db = new Database(logger, clock, whiteboard);
-        FileScanner scanner = new FileScanner(logger, db.fileReceiver, images);
+        FileScanner scanner = new FileScanner(logger, db.fileReceiver, db.doneReceiver, images);
         Looper.prepare();
         Slideshow slideshow = new Slideshow(logger, clock, db.imageRequest, whiteboard, screenSize);
         if (startMotionDetector) {
