@@ -2,6 +2,7 @@ package com.flopcode.slideshow.processes;
 
 import com.flopcode.slideshow.data.images.DatabaseImage;
 import com.flopcode.slideshow.logger.Logger;
+import com.google.common.base.Stopwatch;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.Message;
@@ -19,7 +20,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class FileScanner extends Thread {
 
     private final Handler fileReceiver;
-    private Handler doneReceiver;
+    private final Handler doneReceiver;
     private final String[] baseDirs;
     private final Logger logger;
 
@@ -32,12 +33,13 @@ public class FileScanner extends Thread {
     }
 
     public void run() {
+        Stopwatch scanning = Stopwatch.createStarted();
         for (String baseDir : baseDirs) {
             try {
                 Path path = Paths.get(baseDir).normalize().toAbsolutePath();
-                String pattern = "glob:" + path.toString() + "/**.{jpg,JPG,jpeg,JPEG}";
+                String pattern = "glob:" + path + "/**.{jpg,JPG,jpeg,JPEG}";
                 final PathMatcher matcher = FileSystems.getDefault().getPathMatcher(pattern);
-                Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                Files.walkFileTree(path, new SimpleFileVisitor<>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                         if (matcher.matches(file)) {
@@ -61,6 +63,7 @@ public class FileScanner extends Thread {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            logger.i("All scanned in " + scanning.elapsed().getSeconds());
         }
     }
 }

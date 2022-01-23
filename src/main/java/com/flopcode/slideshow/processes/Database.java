@@ -22,8 +22,8 @@ public class Database extends HandlerThread {
     public Handler imageRequest;
     private Handler requestor = null;
 
-    private List<DatabaseImage> allImages = new ArrayList<>();
-    private FilteredList filteredImages;
+    private final List<DatabaseImage> allImages = new ArrayList<>();
+    private final FilteredList filteredImages;
 
     public Database(Logger logger, Clock clock, Whiteboard whiteboard) {
         this.filteredImages = new FilteredList(logger, clock, whiteboard);
@@ -54,7 +54,7 @@ public class Database extends HandlerThread {
                 try {
                     requestor = (Handler) msg.getData().getObject("requestor");
                     if (requestor == null) {
-                        throw new IllegalArgumentException("expected requestor in bundle");
+                        throw new IllegalArgumentException("Cannot find requestor in bundle");
                     }
                     filteredImages.update(allImages);
                     sendBackToRequestor();
@@ -67,13 +67,12 @@ public class Database extends HandlerThread {
 
     private void addImage(List<DatabaseImage> allImages, DatabaseImage databaseImage) {
         allImages.add(databaseImage);
-        if (filteredImages.add(allImages, databaseImage)) {
-            sendBackToRequestor();
-        }
+        filteredImages.add(allImages, databaseImage);
+        sendBackToRequestor();
     }
 
     private void done() {
-        filteredImages.shuffle();
+        filteredImages.filterAndShuffle();
     }
 
     private void sendBackToRequestor() {
@@ -125,19 +124,25 @@ public class Database extends HandlerThread {
             filter = (image) -> image.creationData.getMonth() == clock.date().getMonth();
         }
 
-        private boolean add(List<DatabaseImage> allImages, DatabaseImage image) {
+        private void add(List<DatabaseImage> allImages, DatabaseImage image) {
             this.allImages = allImages;
-            if (filter.test(image)) {
-                images.add(image);
-                if (images.size() % 50 == 0) {
-                    shuffle();
-                    index = -1;
-                }
-                updateStatistics();
-                return true;
+            images.add(image);
+            if (images.size() % 50 == 0) {
+                shuffle();
+                index = -1;
             }
             updateStatistics();
-            return false;
+        }
+
+        private void filterAndShuffle() {
+            images = new ArrayList<>();
+            for(DatabaseImage image : allImages) {
+                if (filter.test(image)) {
+                    images.add(image);
+                }
+            }
+            Collections.shuffle(images);
+            updateStatistics();
         }
 
         private void updateStatistics() {
@@ -150,8 +155,7 @@ public class Database extends HandlerThread {
             if (!clock.date().isEqual(now)) {
                 logger.i("Rescan images for " + clock.date());
                 updatePredicate();
-                images = new ArrayList<>();
-                allImages.forEach(image -> add(allImages, image));
+                filterAndShuffle();
                 now = clock.date();
             }
         }
