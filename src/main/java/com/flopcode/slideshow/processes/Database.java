@@ -141,7 +141,8 @@ public class Database extends HandlerThread {
                     images.add(image);
                 }
             }
-            Collections.shuffle(images);
+            shuffle();
+            index = -1;
             updateStatistics();
         }
 
