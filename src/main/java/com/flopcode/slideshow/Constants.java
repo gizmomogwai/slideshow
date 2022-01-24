@@ -11,7 +11,7 @@ public class Constants {
     public static Duration REFRESH_DISPLAY;
 
     static {
-        release();
+        debug();
     }
 
     private static void release() {

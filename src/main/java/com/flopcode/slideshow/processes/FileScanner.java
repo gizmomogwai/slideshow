@@ -1,13 +1,14 @@
 package com.flopcode.slideshow.processes;
 
 import com.flopcode.slideshow.data.images.DatabaseImage;
+import com.flopcode.slideshow.data.images.DateAndLocation;
 import com.flopcode.slideshow.logger.Logger;
 import com.google.common.base.Stopwatch;
 import mindroid.os.Bundle;
 import mindroid.os.Handler;
 import mindroid.os.Message;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -16,6 +17,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
 
 public class FileScanner extends Thread {
 
@@ -34,6 +36,7 @@ public class FileScanner extends Thread {
 
     public void run() {
         Stopwatch scanning = Stopwatch.createStarted();
+        ImageCache cache = new ImageCache().load(logger);
         for (String baseDir : baseDirs) {
             try {
                 Path path = Paths.get(baseDir).normalize().toAbsolutePath();
@@ -44,7 +47,7 @@ public class FileScanner extends Thread {
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                         if (matcher.matches(file)) {
                             try {
-                                DatabaseImage dbImage = DatabaseImage.create(logger, file);
+                                DatabaseImage dbImage = DatabaseImage.create(logger, file, cache);
                                 fileReceiver.sendMessage(new Message().setData(new Bundle().putObject("image", dbImage)));
                             } catch (Exception e) {
                                 logger.e("Problems with " + file + ": " + e.getMessage());
@@ -65,5 +68,42 @@ public class FileScanner extends Thread {
             }
             logger.i("All scanned in " + scanning.elapsed().getSeconds());
         }
+    }
+
+    public static class ImageCache {
+        private final String FILE_NAME = "image.cache";
+        private HashMap<File, DateAndLocation> cache = new HashMap<>();
+
+        public ImageCache load(Logger logger) {
+            if (Files.exists(Path.of(FILE_NAME))) {
+                try {
+                    cache = (HashMap<File, DateAndLocation>) new ObjectInputStream(new FileInputStream(FILE_NAME)).readObject();
+                } catch (Exception e) {
+                    logger.e("Cannot load " + FILE_NAME);
+                    cache = new HashMap<>();
+                }
+            }
+            return this;
+        }
+
+        public DateAndLocation get(Path path) {
+            return cache.get(path.toAbsolutePath().toFile());
+        }
+
+        public boolean contains(Path path) {
+            return cache.containsKey(path.toAbsolutePath().toFile());
+        }
+
+        public void add(Path path, DateAndLocation dateAndLocation) throws Exception {
+            cache.put(path.toAbsolutePath().toFile(), dateAndLocation);
+            store();
+        }
+
+        private void store() throws Exception {
+            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+                out.writeObject(cache);
+            }
+        }
+
     }
 }

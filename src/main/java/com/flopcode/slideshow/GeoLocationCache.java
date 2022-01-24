@@ -28,9 +28,9 @@ public class GeoLocationCache {
     }
 
     private void save() throws Exception {
-        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(CACHE_FILENAME));
-        out.writeObject(map);
-        out.close();
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(CACHE_FILENAME))) {
+            out.writeObject(map);
+        }
     }
 
     public String get(URL url, Function<URL, String, Exception> getter) {

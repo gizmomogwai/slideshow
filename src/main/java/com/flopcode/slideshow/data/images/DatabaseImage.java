@@ -6,6 +6,7 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.exif.GpsDirectory;
 import com.flopcode.slideshow.logger.Logger;
+import com.flopcode.slideshow.processes.FileScanner;
 
 import java.io.File;
 import java.nio.channels.FileChannel;
@@ -31,12 +32,22 @@ public class DatabaseImage {
         this.geoLocation = geoLocation;
     }
 
-    public static DatabaseImage create(Logger logger, Path path) throws Exception {
-        Metadata metadata = readMetadata(path);
-        // printMetadata(path, metadata);
-        GeoLocation gps = getGps(metadata);
-        LocalDate creationDate = getCreationDate(logger, path, metadata);
-        return new DatabaseImage(path, creationDate, gps);
+    public static DatabaseImage create(Logger logger, Path path, FileScanner.ImageCache cache) throws Exception {
+        if (cache.contains(path)) {
+            DateAndLocation dateAndLocation = cache.get(path);
+            return new DatabaseImage(path,
+                    dateAndLocation.date,
+                    dateAndLocation.location != null ?
+                            new GeoLocation(dateAndLocation.location.latitude, dateAndLocation.location.longitute) : null);
+        } else {
+            Metadata metadata = readMetadata(path);
+            // printMetadata(path, metadata);
+            GeoLocation gps = getGps(metadata);
+            LocalDate creationDate = getCreationDate(logger, path, metadata);
+
+            cache.add(path, new DateAndLocation(creationDate, gps));
+            return new DatabaseImage(path, creationDate, gps);
+        }
     }
 
     private static GeoLocation getGps(Metadata metadata) {

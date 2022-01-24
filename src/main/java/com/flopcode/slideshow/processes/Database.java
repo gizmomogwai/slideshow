@@ -127,10 +127,6 @@ public class Database extends HandlerThread {
         private void add(List<DatabaseImage> allImages, DatabaseImage image) {
             this.allImages = allImages;
             images.add(image);
-            if (images.size() % 50 == 0) {
-                shuffle();
-                index = -1;
-            }
             updateStatistics();
         }
 

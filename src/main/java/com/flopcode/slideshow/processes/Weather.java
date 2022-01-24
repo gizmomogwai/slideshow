@@ -113,7 +113,7 @@ public class Weather extends Thread {
         }
     }
 
-    private <T> T get(String s, Class<T> clazz) throws IOException {
+private <T> T get(String s, Class<T> clazz) throws IOException {
         URL url = new URL(s);
         logger.d("Weather.getDocument - " + url);
         URLConnection connection = url.openConnection();
