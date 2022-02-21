@@ -56,7 +56,7 @@ public class Database extends HandlerThread {
                     if (requestor == null) {
                         throw new IllegalArgumentException("Cannot find requestor in bundle");
                     }
-                    filteredImages.update(allImages);
+                    filteredImages.update();
                     sendBackToRequestor();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -121,7 +121,7 @@ public class Database extends HandlerThread {
         }
 
         private void updatePredicate() {
-            filter = (image) -> image.creationData.getMonth() == clock.date().getMonth();
+            filter = image -> image.creationData.getMonth() == clock.date().getMonth();
         }
 
         private void add(List<DatabaseImage> allImages, DatabaseImage image) {
@@ -148,7 +148,7 @@ public class Database extends HandlerThread {
             whiteboard.set("databaseStatistics", value);
         }
 
-        public void update(List<DatabaseImage> allImages) {
+        public void update() {
             if (!clock.date().isEqual(now)) {
                 logger.i("Rescan images for " + clock.date());
                 updatePredicate();

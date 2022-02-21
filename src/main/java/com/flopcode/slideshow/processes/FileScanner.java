@@ -34,6 +34,7 @@ public class FileScanner extends Thread {
         start();
     }
 
+    @Override
     public void run() {
         Stopwatch scanning = Stopwatch.createStarted();
         ImageCache cache = new ImageCache().load(logger);
@@ -71,13 +72,13 @@ public class FileScanner extends Thread {
     }
 
     public static class ImageCache {
-        private final String FILE_NAME = "image.cache";
+        private static final String FILE_NAME = "image.cache";
         private HashMap<File, DateAndLocation> cache = new HashMap<>();
 
         public ImageCache load(Logger logger) {
             if (Files.exists(Path.of(FILE_NAME))) {
-                try {
-                    cache = (HashMap<File, DateAndLocation>) new ObjectInputStream(new FileInputStream(FILE_NAME)).readObject();
+                try (ObjectInputStream i = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+                    cache = (HashMap<File, DateAndLocation>) i.readObject();
                 } catch (Exception e) {
                     logger.e("Cannot load " + FILE_NAME);
                     cache = new HashMap<>();
@@ -94,12 +95,12 @@ public class FileScanner extends Thread {
             return cache.containsKey(path.toAbsolutePath().toFile());
         }
 
-        public void add(Path path, DateAndLocation dateAndLocation) throws Exception {
+        public void add(Path path, DateAndLocation dateAndLocation) throws IOException {
             cache.put(path.toAbsolutePath().toFile(), dateAndLocation);
             store();
         }
 
-        private void store() throws Exception {
+        private void store() throws IOException {
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
                 out.writeObject(cache);
             }

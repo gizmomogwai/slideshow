@@ -64,6 +64,7 @@ public class Weather extends Thread {
         }
     }
 
+    @Override
     public void run() {
         while (true) {
             try {
@@ -74,17 +75,18 @@ public class Weather extends Thread {
             try {
                 sleep(Constants.WEATHER_POLL_CYCLE.toMillis());
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 e.printStackTrace();
             }
         }
     }
 
-    private void updateWeather() throws Exception {
+    private void updateWeather() throws IOException {
         // Carola-Neher-Str 10, 48.0878521,11.5414829
         // Seewaldweg 15, 47.678710, 11.186446
         String requestUrl =
-                format("https://api.openweathermap.org/data/2.5/onecall?lat=" + latLon[0] + "&lon=" + latLon[1] + "&units=metric&appid=%s",
-                        appToken);
+                format("https://api.openweathermap.org/data/2.5/onecall?lat=%s&lon=%s&units=metric&appid=%s",
+                        latLon[0], latLon[1], appToken);
         WeatherInfo forecastWeatherInfo = get(requestUrl, WeatherInfo.class);
         minMax.update(forecastWeatherInfo);
 

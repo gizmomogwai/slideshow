@@ -1,14 +1,17 @@
 package com.flopcode.slideshow.data.images;
 
 import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
 import com.drew.lang.GeoLocation;
 import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifDirectoryBase;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.drew.metadata.exif.GpsDirectory;
 import com.flopcode.slideshow.logger.Logger;
 import com.flopcode.slideshow.processes.FileScanner;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,6 +19,7 @@ import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,16 +36,15 @@ public class DatabaseImage {
         this.geoLocation = geoLocation;
     }
 
-    public static DatabaseImage create(Logger logger, Path path, FileScanner.ImageCache cache) throws Exception {
+    public static DatabaseImage create(Logger logger, Path path, FileScanner.ImageCache cache) throws ImageProcessingException, IOException {
         if (cache.contains(path)) {
             DateAndLocation dateAndLocation = cache.get(path);
             return new DatabaseImage(path,
-                    dateAndLocation.date,
-                    dateAndLocation.location != null ?
-                            new GeoLocation(dateAndLocation.location.latitude, dateAndLocation.location.longitute) : null);
+                    dateAndLocation.getDate(),
+                    dateAndLocation.getLocation() != null ?
+                            new GeoLocation(dateAndLocation.getLocation().latitude, dateAndLocation.getLocation().longitute) : null);
         } else {
             Metadata metadata = readMetadata(path);
-            // printMetadata(path, metadata);
             GeoLocation gps = getGps(metadata);
             LocalDate creationDate = getCreationDate(logger, path, metadata);
 
@@ -58,7 +61,7 @@ public class DatabaseImage {
         return null;
     }
 
-    private static Metadata readMetadata(Path path) throws Exception {
+    private static Metadata readMetadata(Path path) throws IOException, ImageProcessingException {
         try (FileChannel channel = FileChannel.open(path)) {
             return ImageMetadataReader.readMetadata(newInputStream(channel));
         }
@@ -68,9 +71,9 @@ public class DatabaseImage {
         try {
             ExifSubIFDDirectory dateDirectory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
             if (dateDirectory == null) {
-                throw new Exception("Cannot find ExifSubIFD for " + path);
+                throw new NoSuchElementException("Cannot find ExifSubIFD for " + path);
             }
-            Date date = dateDirectory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
+            Date date = dateDirectory.getDate(ExifDirectoryBase.TAG_DATETIME_ORIGINAL);
             Calendar c = new GregorianCalendar();
             c.setTime(date);
             return LocalDate.of(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
@@ -83,7 +86,7 @@ public class DatabaseImage {
                 logger.i("Falling back to date from filename " + path + "=" + res);
                 return res;
             }
-            throw new RuntimeException("Cannot get date for " + path, e);
+            throw new CannotGetDateException(path, e);
         }
     }
 

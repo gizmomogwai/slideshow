@@ -1,9 +1,6 @@
 package com.flopcode.slideshow;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.HashMap;
 
@@ -18,16 +15,14 @@ public class GeoLocationCache {
     }
 
     private void load() {
-        try {
-            ObjectInputStream data = new ObjectInputStream(new FileInputStream(CACHE_FILENAME));
+        try (ObjectInputStream data = new ObjectInputStream(new FileInputStream(CACHE_FILENAME))) {
             map = (HashMap<URL, String>) data.readObject();
-            data.close();
         } catch (Exception e) {
             map = new HashMap<>();
         }
     }
 
-    private void save() throws Exception {
+    private void save() throws IOException {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(CACHE_FILENAME))) {
             out.writeObject(map);
         }

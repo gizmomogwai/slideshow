@@ -4,6 +4,7 @@ import com.flopcode.slideshow.logger.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.Image;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -11,38 +12,34 @@ import static java.awt.Image.SCALE_AREA_AVERAGING;
 
 public class WeatherIcons {
 
-    private HashMap<String, String> condition2Icon = new HashMap<String, String>() {
-        {
-            put("broken clouds", "sun-and-clouds");
-            put("clear sky", "sun");
-            put("eclipse", "eclipse");
-            put("few clouds", "sun-and-clouds");
-            put("heavy intensity rain", "stormrain-thunders");
-            put("light rain", "rain-clouds");
-            put("light snow", "snow-clouds");
-            put("mist", "moon-and-clouds");
-            put("moderate rain", "rain-clouds");
-            put("overcast clouds", "sun-and-clouds");
-            put("rain and snow", "snow-clouds");
-            put("scattered clouds", "sun-and-clouds");
-            put("shower rain", "rain-clouds");
-            put("snow", "snow-clouds");
-            put("very heavy rain", "stormrain-thunders");
-        }
-    };
-
+    private HashMap<String, String> condition2Icon = new HashMap<>();
     private HashMap<String, Image> imageCache = new HashMap<>();
     private final Logger logger;
 
     public WeatherIcons(Logger logger) {
         this.logger = logger;
+        condition2Icon.put("broken clouds", "sun-and-clouds");
+        condition2Icon.put("clear sky", "sun");
+        condition2Icon.put("eclipse", "eclipse");
+        condition2Icon.put("few clouds", "sun-and-clouds");
+        condition2Icon.put("heavy intensity rain", "stormrain-thunders");
+        condition2Icon.put("light rain", "rain-clouds");
+        condition2Icon.put("light snow", "snow-clouds");
+        condition2Icon.put("mist", "moon-and-clouds");
+        condition2Icon.put("moderate rain", "rain-clouds");
+        condition2Icon.put("overcast clouds", "sun-and-clouds");
+        condition2Icon.put("rain and snow", "snow-clouds");
+        condition2Icon.put("scattered clouds", "sun-and-clouds");
+        condition2Icon.put("shower rain", "rain-clouds");
+        condition2Icon.put("snow", "snow-clouds");
+        condition2Icon.put("very heavy rain", "stormrain-thunders");
     }
 
-    public Image get(String current) throws Exception {
+    public Image get(String current) throws IOException {
         return get(current, 100);
     }
 
-    public Image get(String current, int size) throws Exception {
+    public Image get(String current, int size) throws IOException {
         String key = current + size;
 
         if (imageCache.containsKey(key)) {

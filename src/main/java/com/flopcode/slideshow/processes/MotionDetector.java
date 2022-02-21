@@ -14,8 +14,7 @@ import mindroid.os.HandlerThread;
 import mindroid.os.Message;
 
 /**
- * Triggers on/off every 50s depending on the last motion detector event.
- * TODO: document
+ * Triggers on/off every 50s depending on the last motion detector events
  */
 public class MotionDetector extends HandlerThread {
 
@@ -42,6 +41,9 @@ public class MotionDetector extends HandlerThread {
                     if (res != 0) {
                         logger.i("MotionDetector.handleMessage - xset dpms force on -> " + res);
                     }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -67,8 +69,8 @@ public class MotionDetector extends HandlerThread {
                 handleState(event.getState());
             });
             handleState(motion.getState());
-        } catch (Throwable t) {
-            t.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
             logger.e("Cannot initialize gpios");
         }
     }
