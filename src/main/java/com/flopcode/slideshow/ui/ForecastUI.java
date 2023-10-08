@@ -30,16 +30,10 @@ class ForecastUI implements UI {
             gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45);
         }
 
-        // daily minimum
-        {
-            String s = "" + Math.round(minTemperature);
-            gfx.drawString(s, gfx.fromRight(50 + gfx.getStringBounds(s).getWidth()), 45 + CurrentConditionUI.LINE_DISTANCE);
-        }
-        // daily maximum
-        {
-            String s = "" + Math.round(maxTemperature);
-            gfx.drawString(s, gfx.fromRight(8 + gfx.getStringBounds(s).getWidth()), 45 + CurrentConditionUI.LINE_DISTANCE);
-        }
+        // min max temperatures
+        String minMax = String.format("%d-%d", Math.round(minTemperature), Math.round(maxTemperature));
+        gfx.drawString(minMax, gfx.fromRight(8 + gfx.getStringBounds(minMax).getWidth()), 45 + CurrentConditionUI.LINE_DISTANCE);
+
         // weather description (e.g. rainy)
         {
             String s = weatherDescriptionToday;

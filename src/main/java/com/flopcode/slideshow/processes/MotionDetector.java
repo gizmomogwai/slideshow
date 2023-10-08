@@ -2,13 +2,12 @@ package com.flopcode.slideshow.processes;
 
 import com.flopcode.slideshow.Constants;
 import com.flopcode.slideshow.logger.Logger;
-import com.pi4j.io.gpio.GpioController;
-import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.GpioPinDigitalInput;
-import com.pi4j.io.gpio.PinPullResistance;
-import com.pi4j.io.gpio.PinState;
-import com.pi4j.io.gpio.RaspiPin;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+import com.pi4j.Pi4J;
+import com.pi4j.context.Context;
+import com.pi4j.io.gpio.digital.DigitalInput;
+import com.pi4j.io.gpio.digital.DigitalInputConfigBuilder;
+import com.pi4j.io.gpio.digital.DigitalState;
+import com.pi4j.io.gpio.digital.PullResistance;
 import mindroid.os.Handler;
 import mindroid.os.HandlerThread;
 import mindroid.os.Message;
@@ -62,13 +61,22 @@ public class MotionDetector extends HandlerThread {
         };
 
         try {
-            final GpioController gpio = GpioFactory.getInstance();
-            final GpioPinDigitalInput motion = gpio.provisionDigitalInputPin(RaspiPin.GPIO_04, PinPullResistance.PULL_DOWN);
-            motion.addListener((GpioPinListenerDigital) event -> {
-                logger.d(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());
-                handleState(event.getState());
+            Context pi4j = Pi4J.newAutoContext();
+
+            DigitalInputConfigBuilder gpio = DigitalInput
+                    .newConfigBuilder(pi4j)
+                    .id("motion detector")
+                    .name("motion detector")
+                    .address(4)
+                    .pull(PullResistance.PULL_DOWN)
+                    .debounce(3000L)
+                    .provider("pigpio-digital-input");
+            DigitalInput motion = pi4j.create(gpio);
+            motion.addListener(event -> {
+                logger.d(" --> GPIO PIN STATE CHANGE: " + event.source() + " = " + event.state());
+                handleState(event.state());
             });
-            handleState(motion.getState());
+            handleState(motion.state());
         } catch (Exception e) {
             e.printStackTrace();
             logger.e("Cannot initialize gpios");
@@ -79,10 +87,10 @@ public class MotionDetector extends HandlerThread {
         return new Message().setWhat(ON);
     }
 
-    private void handleState(PinState state) {
+    private void handleState(DigitalState state) {
         activate.removeMessages(OFF);
         activate.removeMessages(ON);
-        if (state == PinState.HIGH) {
+        if (state == DigitalState.HIGH) {
             logger.d("MotionDetector.MotionDetector - keeping on");
             activate.sendMessage(createKeepOnMessage());
         } else {

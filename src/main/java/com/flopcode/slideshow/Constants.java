@@ -25,7 +25,7 @@ public class Constants {
     }
 
     private static void debug() {
-        SLIDESHOW_NEXT_IMAGE = ofSeconds(15);
+        SLIDESHOW_NEXT_IMAGE = ofSeconds(5);
         WEATHER_POLL_CYCLE = ofMinutes(5);
         REFRESH_DISPLAY = ofSeconds(50);
     }

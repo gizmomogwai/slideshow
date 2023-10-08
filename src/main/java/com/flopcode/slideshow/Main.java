@@ -21,7 +21,6 @@ import java.io.FileReader;
 import java.util.Properties;
 
 import static com.flopcode.slideshow.logger.Logger.Level.DEBUG;
-import static com.flopcode.slideshow.logger.Logger.Level.INFO;
 import static java.lang.Boolean.getBoolean;
 import static java.lang.String.join;
 import static java.lang.System.getenv;
@@ -62,8 +61,7 @@ public class Main {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         logger.i("screenSize = " + screenSize);
-        //screenSize.width /= 2;
-        //screenSize.height /= 2;
+         screenSize.width -= 200;
 
         Database db = new Database(logger, clock, whiteboard);
         FileScanner scanner = new FileScanner(logger, db.fileReceiver, db.doneReceiver, images);
@@ -91,6 +89,7 @@ public class Main {
             public void keyTyped(KeyEvent e) {
                 switch (e.getKeyChar()) {
                 case 'd':
+                    System.out.println("Main.keyTyped");
                     slideshow.nextStep.sendMessage(new Message());
                     break;
                 }
