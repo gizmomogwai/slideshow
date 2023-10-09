@@ -1,11 +1,11 @@
 # coding: utf-8
 require "English"
 
-#SSH_TARGET = "pi@slideshow"
+#SSH_TARGET = "pi@slideshow.local"
 #SSH_TARGET = "pi@seehaus.local"
 
 SSH_TARGETS = [
-  "pi@slideshow",
+  "pi@slideshow.local",
   "pi@seehaus-blau.local",
 ]
 
